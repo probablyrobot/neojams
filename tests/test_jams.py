@@ -8,7 +8,7 @@ import sys
 import tempfile
 import warnings
 
-import jams
+import neojams
 import numpy as np
 import pytest
 
@@ -29,7 +29,7 @@ def clean_warning_registry():
 def test_jobject_dict():
     data = dict(key1="value 1", key2="value 2")
 
-    J = jams.JObject(**data)
+    J = neojams.JObject(**data)
 
     jdict = J.__dict__
 
@@ -41,7 +41,7 @@ def test_jobject_serialize():
 
     json_data = json.dumps(data, indent=2)
 
-    J = jams.JObject(**data)
+    J = neojams.JObject(**data)
 
     # Stick a dummy _value in for testing
     J._dummy = True
@@ -55,11 +55,11 @@ def test_jobject_serialize():
 def test_jobject_deserialize():
     data = dict(key1="value 1", key2="value 2")
 
-    J = jams.JObject(**data)
+    J = neojams.JObject(**data)
 
     json_jobject = J.dumps(indent=2)
 
-    assert J == jams.JObject.loads(json_jobject)
+    assert J == neojams.JObject.loads(json_jobject)
 
 
 @pytest.mark.parametrize("d1", [dict(key1="value 1", key2="value 2")])
@@ -67,8 +67,8 @@ def test_jobject_deserialize():
     "d2, match", [(dict(key1="value 1", key2="value 2"), True), (dict(key1="value 1", key2="value 3"), False)]
 )
 def test_jobject_eq(d1, d2, match):
-    J1 = jams.JObject(**d1)
-    J2 = jams.JObject(**d2)
+    J1 = neojams.JObject(**d1)
+    J2 = neojams.JObject(**d2)
 
     # Test self-equivalence
     assert J1 == J1
@@ -79,27 +79,27 @@ def test_jobject_eq(d1, d2, match):
     assert (J2 == J1) == match
 
     # Test type safety
-    J3 = jams.Sandbox(**d1)
+    J3 = neojams.Sandbox(**d1)
     assert not J1 == J3
 
 
 @pytest.mark.parametrize("data, value", [({"key": True}, True), ({}, False)])
 def test_jobject_nonzero(data, value):
-    J = jams.JObject(**data)
+    J = neojams.JObject(**data)
     assert J.__nonzero__() == value
 
 
 def test_jobject_repr():
-    assert repr(jams.JObject(foo=1, bar=2)) == "<JObject(bar=2,\n         foo=1)>"
+    assert repr(neojams.JObject(foo=1, bar=2)) == "<JObject(bar=2,\n         foo=1)>"
 
 
 def test_jobject_repr_html():
     # Test once with empty
-    J2 = jams.JObject()
+    J2 = neojams.JObject()
     J2._repr_html_()
 
     # And once with some nested values
-    J = jams.JObject(foo=1, bar=dict(baz=3), qux=[1], quux=None)
+    J = neojams.JObject(foo=1, bar=dict(baz=3), qux=[1], quux=None)
     J._repr_html_()
 
 
@@ -107,7 +107,7 @@ def test_jobject_repr_html():
 def test_sandbox():
     data = dict(key1="value 1", key2="value 2")
 
-    J = jams.Sandbox(**data)
+    J = neojams.Sandbox(**data)
 
     for key, value in data.items():
         assert value == J[key]
@@ -115,7 +115,7 @@ def test_sandbox():
 
 def test_sandbox_contains():
     d = dict(foo=5, bar=9)
-    S = jams.Sandbox(**d)
+    S = neojams.Sandbox(**d)
 
     for key in d:
         assert key in S
@@ -123,7 +123,7 @@ def test_sandbox_contains():
 
 # Curator
 def test_curator():
-    c = jams.Curator(name="myself", email="you@me.com")
+    c = neojams.Curator(name="myself", email="you@me.com")
 
     assert c.name == "myself"
     assert c.email == "you@me.com"
@@ -142,10 +142,10 @@ def ann_meta_dummy():
     )
 
 
-@pytest.mark.parametrize("curator", [None, jams.Curator(name="nobody", email="none@none.com")])
-@pytest.mark.parametrize("annotator", [None, jams.Sandbox(description="desc")])
+@pytest.mark.parametrize("curator", [None, neojams.Curator(name="nobody", email="none@none.com")])
+@pytest.mark.parametrize("annotator", [None, neojams.Sandbox(description="desc")])
 def test_annotation_metadata(ann_meta_dummy, curator, annotator):
-    md = jams.AnnotationMetadata(curator=curator, annotator=annotator, **ann_meta_dummy)
+    md = neojams.AnnotationMetadata(curator=curator, annotator=annotator, **ann_meta_dummy)
 
     if curator is not None:
         assert dict(md.curator) == dict(curator)
@@ -170,17 +170,17 @@ def tag_data():
 
 @pytest.fixture(scope="module")
 def ann_sandbox():
-    return jams.Sandbox(description="ann_sandbox")
+    return neojams.Sandbox(description="ann_sandbox")
 
 
 @pytest.fixture(scope="module")
 def ann_metadata():
-    return jams.AnnotationMetadata(corpus="test collection")
+    return neojams.AnnotationMetadata(corpus="test collection")
 
 
 @pytest.mark.parametrize("namespace", ["tag_open"])
 def test_annotation(namespace, tag_data, ann_metadata, ann_sandbox):
-    ann = jams.Annotation(namespace, data=tag_data, annotation_metadata=ann_metadata, sandbox=ann_sandbox)
+    ann = neojams.Annotation(namespace, data=tag_data, annotation_metadata=ann_metadata, sandbox=ann_sandbox)
 
     assert namespace == ann.namespace
 
@@ -201,7 +201,7 @@ def test_annotation_append():
 
     namespace = "tag_open"
 
-    ann = jams.Annotation(namespace, data=data)
+    ann = neojams.Annotation(namespace, data=data)
 
     update = dict(time=2.0, duration=1.0, value="three", confidence=0.8)
 
@@ -213,8 +213,8 @@ def test_annotation_append():
 def test_annotation_eq(tag_data):
     namespace = "tag_open"
 
-    ann1 = jams.Annotation(namespace, data=tag_data)
-    ann2 = jams.Annotation(namespace, data=tag_data)
+    ann1 = neojams.Annotation(namespace, data=tag_data)
+    ann2 = neojams.Annotation(namespace, data=tag_data)
 
     assert ann1 == ann2
 
@@ -236,15 +236,15 @@ def test_annotation_iterator():
 
     namespace = "tag_open"
 
-    ann = jams.Annotation(namespace, data=data)
+    ann = neojams.Annotation(namespace, data=data)
 
     for obs, obs_raw in zip(ann, data, strict=False):
-        assert isinstance(obs, jams.Observation)
+        assert isinstance(obs, neojams.Observation)
         assert obs._asdict() == obs_raw, (obs, obs_raw)
 
 
 def test_annotation_interval_values(tag_data):
-    ann = jams.Annotation(namespace="tag_open", data=tag_data)
+    ann = neojams.Annotation(namespace="tag_open", data=tag_data)
 
     intervals, values = ann.to_interval_values()
 
@@ -253,17 +253,17 @@ def test_annotation_interval_values(tag_data):
 
 
 def test_annotation_badtype():
-    an = jams.Annotation(namespace="tag_open")
+    an = neojams.Annotation(namespace="tag_open")
 
     # This should throw a jams error because NoneType can't be indexed
-    with pytest.raises(jams.JamsError):
+    with pytest.raises(neojams.JamsError):
         an.data.add(None)
 
 
 # FileMetadata
 def test_filemetadata():
     meta = dict(title="Test track", artist="Test artist", release="Test release", duration=31.3)
-    fm = jams.FileMetadata(**meta)
+    fm = neojams.FileMetadata(**meta)
     dict_fm = dict(fm)
 
     for k in meta:
@@ -272,7 +272,7 @@ def test_filemetadata():
 
 def test_filemetadata_validation_warning():
     # This should fail validation because null duration is not allowed
-    fm = jams.FileMetadata(title="Test track", artist="Test artist", release="Test release", duration=None)
+    fm = neojams.FileMetadata(title="Test track", artist="Test artist", release="Test release", duration=None)
 
     clean_warning_registry()
 
@@ -282,24 +282,24 @@ def test_filemetadata_validation_warning():
 
 def test_filemetadata_validation_strict():
     # This should fail validation because null duration is not allowed
-    fm = jams.FileMetadata(title="Test track", artist="Test artist", release="Test release", duration=None)
+    fm = neojams.FileMetadata(title="Test track", artist="Test artist", release="Test release", duration=None)
 
     clean_warning_registry()
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         fm.validate(strict=True)
 
 
 # AnnotationArray
 def test_annotation_array():
-    arr = jams.AnnotationArray()
+    arr = neojams.AnnotationArray()
 
     assert len(arr) == 0
 
 
 def test_annotation_array_data(tag_data):
-    ann = jams.Annotation("tag_open", data=tag_data)
-    arr = jams.AnnotationArray(annotations=[ann, ann])
+    ann = neojams.Annotation("tag_open", data=tag_data)
+    arr = neojams.AnnotationArray(annotations=[ann, ann])
 
     assert len(arr) == 2
     arr.append(ann)
@@ -312,21 +312,21 @@ def test_annotation_array_data(tag_data):
 
 def test_annotation_array_serialize(tag_data):
     namespace = "tag_open"
-    ann = jams.Annotation(namespace, data=tag_data)
+    ann = neojams.Annotation(namespace, data=tag_data)
 
-    arr = jams.AnnotationArray(annotations=[ann, ann])
+    arr = neojams.AnnotationArray(annotations=[ann, ann])
 
     arr_js = arr.__json__
 
-    arr2 = jams.AnnotationArray(annotations=arr_js)
+    arr2 = neojams.AnnotationArray(annotations=arr_js)
 
     assert arr == arr2
 
 
 def test_annotation_array_index_simple():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
 
-    anns = [jams.Annotation("beat") for _ in range(5)]
+    anns = [neojams.Annotation("beat") for _ in range(5)]
 
     for ann in anns:
         jam.annotations.append(ann)
@@ -338,9 +338,9 @@ def test_annotation_array_index_simple():
 
 
 def test_annotation_array_slice_simple():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
 
-    anns = [jams.Annotation("beat") for _ in range(5)]
+    anns = [neojams.Annotation("beat") for _ in range(5)]
 
     for ann in anns:
         jam.annotations.append(ann)
@@ -351,8 +351,8 @@ def test_annotation_array_slice_simple():
 
 
 def test_annotation_array_index_fancy():
-    jam = jams.JAMS()
-    ann = jams.Annotation(namespace="beat")
+    jam = neojams.JAMS()
+    ann = neojams.Annotation(namespace="beat")
     jam.annotations.append(ann)
 
     # We should have exactly one beat annotation
@@ -365,9 +365,9 @@ def test_annotation_array_index_fancy():
 
 
 def test_annotation_array_composite():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
     for _ in range(10):
-        ann = jams.Annotation(namespace="beat")
+        ann = neojams.Annotation(namespace="beat")
         jam.annotations.append(ann)
 
     assert len(jam.annotations["beat", :3]) == 3
@@ -376,8 +376,8 @@ def test_annotation_array_composite():
 
 
 def test_annotation_array_index_error():
-    jam = jams.JAMS()
-    ann = jams.Annotation(namespace="beat")
+    jam = neojams.JAMS()
+    ann = neojams.Annotation(namespace="beat")
     jam.annotations.append(ann)
 
     with pytest.raises(IndexError):
@@ -387,14 +387,14 @@ def test_annotation_array_index_error():
 # JAMS
 @pytest.fixture(scope="module")
 def file_metadata():
-    return jams.FileMetadata(title="Test track", artist="Test artist", release="Test release", duration=31.3)
+    return neojams.FileMetadata(title="Test track", artist="Test artist", release="Test release", duration=31.3)
 
 
 def test_jams(tag_data, file_metadata, ann_sandbox):
-    ann = jams.Annotation("tag_open", data=tag_data)
-    annotations = jams.AnnotationArray(annotations=[ann])
+    ann = neojams.Annotation("tag_open", data=tag_data)
+    annotations = neojams.AnnotationArray(annotations=[ann])
 
-    jam = jams.JAMS(annotations=annotations, file_metadata=file_metadata, sandbox=ann_sandbox)
+    jam = neojams.JAMS(annotations=annotations, file_metadata=file_metadata, sandbox=ann_sandbox)
 
     assert dict(file_metadata) == dict(jam.file_metadata)
     assert dict(ann_sandbox) == dict(jam.sandbox)
@@ -412,12 +412,12 @@ def output_path(request):
 
 @pytest.fixture(scope="module")
 def input_jam():
-    return jams.load("tests/fixtures/valid.jams")
+    return neojams.load("tests/fixtures/valid.jams")
 
 
 def test_jams_save(input_jam, output_path):
     input_jam.save(output_path)
-    reload_jam = jams.load(output_path)
+    reload_jam = neojams.load(output_path)
     assert input_jam == reload_jam
 
 
@@ -425,13 +425,13 @@ def test_jams_add(tag_data):
     fn = "tests/fixtures/valid.jams"
 
     # The original jam
-    jam_orig = jams.load(fn)
-    jam = jams.load(fn)
+    jam_orig = neojams.load(fn)
+    jam = neojams.load(fn)
 
     # Make a new jam with the same metadata and different data
-    jam2 = jams.load(fn)
-    ann = jams.Annotation("tag_open", data=tag_data)
-    jam2.annotations = jams.AnnotationArray(annotations=[ann])
+    jam2 = neojams.load(fn)
+    ann = neojams.Annotation("tag_open", data=tag_data)
+    jam2.annotations = neojams.AnnotationArray(annotations=[ann])
 
     # Add the two
     jam.add(jam2)
@@ -446,13 +446,13 @@ def test_jams_add_conflict(on_conflict):
     fn = "tests/fixtures/valid.jams"
 
     # The original jam
-    jam = jams.load(fn)
-    jam_orig = jams.load(fn)
+    jam = neojams.load(fn)
+    jam_orig = neojams.load(fn)
 
     # The copy
-    jam2 = jams.load(fn)
+    jam2 = neojams.load(fn)
 
-    jam2.file_metadata = jams.FileMetadata()
+    jam2.file_metadata = neojams.FileMetadata()
 
     jam.add(jam2, on_conflict=on_conflict)
 
@@ -462,22 +462,22 @@ def test_jams_add_conflict(on_conflict):
         assert jam.file_metadata == jam_orig.file_metadata
 
 
-@pytest.mark.parametrize("on_conflict,exception", [("fail", jams.JamsError), ("bad_fail_mdoe", jams.ParameterError)])
+@pytest.mark.parametrize("on_conflict,exception", [("fail", neojams.JamsError), ("bad_fail_mdoe", neojams.ParameterError)])
 def test_jams_add_conflict_exceptions(on_conflict, exception):
     fn = "tests/fixtures/valid.jams"
 
     # The original jam
-    jam = jams.load(fn)
+    jam = neojams.load(fn)
 
     # The copy
-    jam2 = jams.load(fn)
-    jam2.file_metadata = jams.FileMetadata()
+    jam2 = neojams.load(fn)
+    jam2.file_metadata = neojams.FileMetadata()
 
     with pytest.raises(exception):
         jam.add(jam2, on_conflict=on_conflict)
 
 
-jam = jams.load("tests/fixtures/valid.jams", validate=False)
+jam = neojams.load("tests/fixtures/valid.jams", validate=False)
 jam.annotations[0].sandbox.foo = None
 
 
@@ -488,8 +488,8 @@ jam.annotations[0].sandbox.foo = None
         (dict(), []),
         (dict(namespace="beat"), jam.annotations[:1]),
         (dict(namespace="tag_open"), jam.annotations[1:]),
-        (dict(namespace="segment_tut"), jams.AnnotationArray()),
-        (dict(foo="bar"), jams.AnnotationArray()),
+        (dict(namespace="segment_tut"), neojams.AnnotationArray()),
+        (dict(foo="bar"), neojams.AnnotationArray()),
     ],
 )
 def test_jams_search(query, expected):
@@ -498,7 +498,7 @@ def test_jams_search(query, expected):
 
 def test_jams_validate_good():
     fn = "tests/fixtures/valid.jams"
-    j1 = jams.load(fn, validate=False)
+    j1 = neojams.load(fn, validate=False)
 
     j1.validate()
 
@@ -507,7 +507,7 @@ def test_jams_validate_good():
 
 @pytest.fixture(scope="module")
 def jam_validate():
-    j1 = jams.load("tests/fixtures/invalid.jams", validate=False)
+    j1 = neojams.load("tests/fixtures/invalid.jams", validate=False)
     return j1
 
 
@@ -521,19 +521,19 @@ def test_jams_validate_warning(jam_validate):
 def test_jams_validate_exception(jam_validate):
     clean_warning_registry()
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         jam_validate.validate(strict=True)
 
 
 def test_jams_bad_field():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         jam.out_of_schema = None
 
 
 def test_jams_bad_annotation_warnings():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
     jam.file_metadata.duration = 10
 
     jam.annotations.append("not an annotation")
@@ -545,19 +545,19 @@ def test_jams_bad_annotation_warnings():
 
 
 def test_jams_bad_annotation_exception():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
     jam.file_metadata.duration = 10
 
     jam.annotations.append("not an annotation")
 
     clean_warning_registry()
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         jam.validate(strict=True)
 
 
 def test_jams_bad_jam_warning():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
 
     clean_warning_registry()
 
@@ -566,11 +566,11 @@ def test_jams_bad_jam_warning():
 
 
 def test_jams_bad_jam_exception():
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
 
     clean_warning_registry()
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         jam.validate(strict=True)
 
 
@@ -596,7 +596,7 @@ def test_load_fail():
     # Make a non-existent file
     tdir = tempfile.mkdtemp()
     with pytest.raises(IOError):
-        jams.load(os.path.join(tdir, "nonexistent.jams"), fmt="jams")
+        neojams.load(os.path.join(tdir, "nonexistent.jams"), fmt="jams")
     os.rmdir(tdir)
 
     # Make a non-json file
@@ -606,7 +606,7 @@ def test_load_fail():
         fp.write("some garbage")
 
     with pytest.raises(ValueError):
-        jams.load(os.path.join(tdir, "nonexistent.jams"), fmt="jams")
+        neojams.load(os.path.join(tdir, "nonexistent.jams"), fmt="jams")
 
     os.unlink(badfile)
     os.rmdir(tdir)
@@ -614,16 +614,16 @@ def test_load_fail():
     tdir = tempfile.mkdtemp()
     for ext in ["txt", ""]:
         badfile = os.path.join(tdir, "nonexistent")
-        with pytest.raises(jams.ParameterError):
-            jams.load(f"{badfile:s}.{ext:s}", fmt="auto")
-        with pytest.raises(jams.ParameterError):
-            jams.load(f"{badfile:s}.{ext:s}", fmt=ext)
-        with pytest.raises(jams.ParameterError):
-            jams.load(f"{badfile:s}.jams", fmt=ext)
+        with pytest.raises(neojams.ParameterError):
+            neojams.load(f"{badfile:s}.{ext:s}", fmt="auto")
+        with pytest.raises(neojams.ParameterError):
+            neojams.load(f"{badfile:s}.{ext:s}", fmt=ext)
+        with pytest.raises(neojams.ParameterError):
+            neojams.load(f"{badfile:s}.jams", fmt=ext)
 
     # one last test, trying to load form a non-file-like object
-    with pytest.raises(jams.ParameterError):
-        jams.load(None, fmt="auto")
+    with pytest.raises(neojams.ParameterError):
+        neojams.load(None, fmt="auto")
 
     os.rmdir(tdir)
 
@@ -636,7 +636,7 @@ def test_load_valid():
     for ext in ["jams", "jamz"]:
         for validate in [False, True]:
             for strict in [False, True]:
-                jams.load(f"{fn:s}.{ext:s}", validate=validate, strict=strict)
+                neojams.load(f"{fn:s}.{ext:s}", validate=validate, strict=strict)
 
 
 def test_load_invalid():
@@ -644,32 +644,32 @@ def test_load_invalid():
         clean_warning_registry()
 
         with pytest.warns(UserWarning, match=".*(Failed validating).*"):
-            jams.load(filename, validate=valid, strict=strict)
+            neojams.load(filename, validate=valid, strict=strict)
 
     # 5. test bad jams file with strict validation
     # 6. test bad jams file without strict validation
     fn = "tests/fixtures/invalid.jams"
 
     # Test once with no validation
-    jams.load(fn, validate=False, strict=False)
+    neojams.load(fn, validate=False, strict=False)
 
     # With validation, failure can either be a warning or an exception
-    with pytest.raises(jams.SchemaError):
-        jams.load(fn, validate=True, strict=True)
+    with pytest.raises(neojams.SchemaError):
+        neojams.load(fn, validate=True, strict=True)
 
     __test_warn(fn, True, False)
 
 
 def test_annotation_trim_bad_params():
     # end_time must be greater than start_time
-    ann = jams.Annotation("tag_open")
-    with pytest.raises(jams.ParameterError):
+    ann = neojams.Annotation("tag_open")
+    with pytest.raises(neojams.ParameterError):
         ann.trim(5, 3, strict=False)
 
 
 def test_annotation_trim_no_duration():
     # When ann.duration is not set prior to trim should raise warning
-    ann = jams.Annotation("tag_open")
+    ann = neojams.Annotation("tag_open")
     ann.duration = None
 
     clean_warning_registry()
@@ -683,7 +683,7 @@ def test_annotation_trim_no_duration():
     # When duration is not defined trim should keep all observations in the
     # user-specified trim range.
     namespace = "tag_open"
-    ann = jams.Annotation(namespace)
+    ann = neojams.Annotation(namespace)
     ann.time = 100
     ann.duration = None
     ann.append(time=5, duration=2, value="one")
@@ -697,7 +697,7 @@ def test_annotation_trim_no_duration():
     assert "annotation.duration is not defined" in str(out[0].message).lower()
 
     expected_data = dict(time=[5.0], duration=[2.0], value=["one"], confidence=[None])
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=5.0, duration=3.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=5.0, duration=3.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -705,7 +705,7 @@ def test_annotation_trim_no_duration():
 def test_annotation_trim_no_overlap():
     # when there's no overlap, a warning is raised and the
     # returned annotation should be empty
-    ann = jams.Annotation("tag_open")
+    ann = neojams.Annotation("tag_open")
     ann.time = 5
     ann.duration = 10
 
@@ -731,7 +731,7 @@ def test_annotation_trim_complete_overlap():
     data = dict(
         time=[5.0, 5.0, 10.0], duration=[2.0, 4.0, 4.0], value=["one", "two", "three"], confidence=[0.9, 0.9, 0.9]
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
     # When the trim region is completely inside the annotation time range
 
@@ -745,7 +745,7 @@ def test_annotation_trim_complete_overlap():
     assert ann_trim.annotation_metadata == ann.annotation_metadata
 
     expected_data = dict(time=[8.0, 10.0], duration=[1.0, 2.0], value=["two", "three"], confidence=[0.9, 0.9])
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=8.0, duration=4.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=8.0, duration=4.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -759,7 +759,7 @@ def test_annotation_trim_complete_overlap():
     assert ann_trim.annotation_metadata == ann.annotation_metadata
 
     expected_data = None
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=8.0, duration=4.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=8.0, duration=4.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -775,7 +775,7 @@ def test_annotation_trim_partial_overlap_beginning():
         value=["none", "zero", "one", "two", "three"],
         confidence=[1, 0.1, 0.9, 0.9, 0.9],
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
     ann_trim = ann.trim(1, 8, strict=False)
 
@@ -788,7 +788,7 @@ def test_annotation_trim_partial_overlap_beginning():
     expected_data = dict(
         time=[5.0, 5.0, 5.0], duration=[0.0, 2.0, 3.0], value=["zero", "one", "two"], confidence=[0.1, 0.9, 0.9]
     )
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=5.0, duration=3.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=5.0, duration=3.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -802,7 +802,7 @@ def test_annotation_trim_partial_overlap_beginning():
     assert ann_trim.annotation_metadata == ann.annotation_metadata
 
     expected_data = dict(time=[5.0, 5.0], duration=[0.0, 2.0], value=["zero", "one"], confidence=[0.1, 0.9])
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=5.0, duration=3.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=5.0, duration=3.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -815,7 +815,7 @@ def test_annotation_trim_partial_overlap_end():
     data = dict(
         time=[5.0, 5.0, 10.0], duration=[2.0, 4.0, 4.0], value=["one", "two", "three"], confidence=[0.9, 0.9, 0.9]
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
     ann_trim = ann.trim(8, 20, strict=False)
 
@@ -826,7 +826,7 @@ def test_annotation_trim_partial_overlap_end():
     assert ann_trim.annotation_metadata == ann.annotation_metadata
 
     expected_data = dict(time=[8.0, 10.0], duration=[1.0, 4.0], value=["two", "three"], confidence=[0.9, 0.9])
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=8.0, duration=7.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=8.0, duration=7.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -840,7 +840,7 @@ def test_annotation_trim_partial_overlap_end():
     assert ann_trim.annotation_metadata == ann.annotation_metadata
 
     expected_data = dict(time=[10.0], duration=[4.0], value=["three"], confidence=[0.9])
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=8.0, duration=7.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=8.0, duration=7.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -852,7 +852,7 @@ def test_annotation_trim_multiple():
     data = dict(
         time=[5.0, 5.0, 10.0], duration=[2.0, 4.0, 4.0], value=["one", "two", "three"], confidence=[0.9, 0.9, 0.9]
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
     ann_trim = ann.trim(0, 10, strict=False).trim(8, 20, strict=False)
     assert ann_trim.time == 8
@@ -868,7 +868,7 @@ def test_annotation_trim_multiple():
 
     expected_data = dict(time=[8.0], duration=[1.0], value=["two"], confidence=[0.9])
 
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=8.0, duration=2.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=8.0, duration=2.0)
 
     assert ann_trim.data == expected_ann.data
 
@@ -887,46 +887,46 @@ def test_annotation_trim_multiple():
     assert ann_trim.annotation_metadata == ann.annotation_metadata
 
     expected_data = None
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=8.0, duration=2.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=8.0, duration=2.0)
 
     assert ann_trim.data == expected_ann.data
 
 
 def test_jams_trim_no_duration():
     # Empty jam has no file metadata, can't trim!
-    jam = jams.JAMS()
-    with pytest.raises(jams.JamsError):
+    jam = neojams.JAMS()
+    with pytest.raises(neojams.JamsError):
         jam.trim(0, 1, strict=False)
 
 
 def test_jams_trim_bad_params():
     # If trim parameters aren't contained in file's duration, or if end time is
     # smaller than start time, can't trim.
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
     jam.file_metadata.duration = 15
 
     # Can only trim if values are within time range spanned by jam and end_time
     # > start_time
     trim_times = [(-5, -1), (-5, 10), (-5, 20), (5, 20), (18, 20), (10, 8)]
     for tt in trim_times:
-        with pytest.raises(jams.ParameterError):
+        with pytest.raises(neojams.ParameterError):
             jam.trim(tt[0], tt[1], strict=False)
 
 
 def test_jams_trim_valid():
     # For a valid scenario, ensure everything behaves as expected
-    jam = jams.JAMS()
+    jam = neojams.JAMS()
     jam.file_metadata.duration = 15
 
     namespace = "tag_open"
     data = dict(
         time=[5.0, 5.0, 10.0], duration=[2.0, 4.0, 4.0], value=["one", "two", "three"], confidence=[0.9, 0.9, 0.9]
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
     for _ in range(5):
         jam.annotations.append(ann)
 
-    ann_copy = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann_copy = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
     ann_trim = ann_copy.trim(0, 10, strict=False)
     jam_trim = jam.trim(0, 10, strict=False)
 
@@ -954,14 +954,14 @@ def test_annotation_slice():
     data = dict(
         time=[5.0, 6.0, 10.0], duration=[2.0, 4.0, 4.0], value=["one", "two", "three"], confidence=[0.9, 0.9, 0.9]
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
     # Slice out range that's completely inside the time range spanned by the
     # annotation
     ann_slice = ann.slice(8, 10, strict=False)
     expected_data = dict(time=[0.0], duration=[2.0], value=["two"], confidence=[0.9])
 
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=0, duration=2.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=0, duration=2.0)
 
     assert ann_slice.data == expected_ann.data
     assert ann_slice.sandbox.slice == [{"start_time": 8, "end_time": 10, "slice_start": 8, "slice_end": 10}]
@@ -973,7 +973,7 @@ def test_annotation_slice():
     ann_slice = ann.slice(3, 10, strict=False)
     expected_data = dict(time=[2.0, 3.0], duration=[2.0, 4.0], value=["one", "two"], confidence=[0.9, 0.9])
 
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=2.0, duration=5.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=2.0, duration=5.0)
     assert ann_slice.time == expected_ann.time
     assert ann_slice.duration == expected_ann.duration
 
@@ -985,7 +985,7 @@ def test_annotation_slice():
     ann_slice = ann.slice(8, 20, strict=False)
     expected_data = dict(time=[0.0, 2.0], duration=[2.0, 4.0], value=["two", "three"], confidence=[0.9, 0.9])
 
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=0, duration=7.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=0, duration=7.0)
 
     assert ann_slice.data == expected_ann.data
     assert ann_slice.sandbox.slice == ([{"start_time": 8, "end_time": 20, "slice_start": 8, "slice_end": 15}])
@@ -996,7 +996,7 @@ def test_annotation_slice():
     ann_slice = ann.slice(0, 10).slice(8, 10)
     expected_data = dict(time=[0.0], duration=[2.0], value=["two"], confidence=[0.9])
 
-    expected_ann = jams.Annotation(namespace, data=expected_data, time=0, duration=2.0)
+    expected_ann = neojams.Annotation(namespace, data=expected_data, time=0, duration=2.0)
 
     assert ann_slice.data == expected_ann.data
     assert ann_slice.sandbox.slice == (
@@ -1011,8 +1011,8 @@ def test_annotation_slice():
 
 def test_jams_slice():
     # Empty jam has no file metadata, can't slice!
-    jam = jams.JAMS()
-    with pytest.raises((jams.ParameterError, jams.JamsError)):
+    jam = neojams.JAMS()
+    with pytest.raises((neojams.ParameterError, neojams.JamsError)):
         jam.slice(0, 1, strict=False)
 
     jam.file_metadata.duration = 15
@@ -1021,7 +1021,7 @@ def test_jams_slice():
     # > start_time
     slice_times = [(-5, -1), (-5, 10), (-5, 20), (5, 20), (18, 20), (10, 8)]
     for tt in slice_times:
-        with pytest.raises((jams.ParameterError, jams.JamsError)):
+        with pytest.raises((neojams.ParameterError, neojams.JamsError)):
             jam.slice(tt[0], tt[1], strict=False)
 
     # For a valid scenario, ensure everything behaves as expected
@@ -1029,11 +1029,11 @@ def test_jams_slice():
     data = dict(
         time=[5.0, 5.0, 10.0], duration=[2.0, 4.0, 4.0], value=["one", "two", "three"], confidence=[0.9, 0.9, 0.9]
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
     for _ in range(5):
         jam.annotations.append(ann)
 
-    ann_copy = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann_copy = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
     ann_slice = ann_copy.slice(0, 10, strict=False)
     jam_slice = jam.slice(0, 10, strict=False)
 
@@ -1066,7 +1066,7 @@ def test_annotation_data_frame():
     data = dict(
         time=[5.0, 5.0, 10.0], duration=[2.0, 4.0, 4.0], value=["one", "two", "three"], confidence=[0.9, 0.9, 0.9]
     )
-    ann = jams.Annotation(namespace, data=data, time=5.0, duration=10.0)
+    ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
     df = ann.to_dataframe()
 
@@ -1080,7 +1080,7 @@ def test_annotation_data_frame():
 
 
 def test_deprecated():
-    @jams.core.deprecated("old version", "new version")
+    @neojams.core.deprecated("old version", "new version")
     def _foo():
         pass
 
@@ -1101,20 +1101,20 @@ def test_deprecated():
 
 def test_numpy_serialize():
     # Test to trigger issue #159 - serializing numpy dtypes
-    jobj = jams.JObject(key=np.float32(1.0))
+    jobj = neojams.JObject(key=np.float32(1.0))
     jobj.dumps()
 
 
 def test_annotation_serialize():
     # Secondary test to trigger #159 on observation data
-    ann = jams.Annotation(namespace="tag_open", duration=1.0)
+    ann = neojams.Annotation(namespace="tag_open", duration=1.0)
     ann.append(time=np.float32(0), duration=np.float32(1), value=np.float32(5), confidence=np.float32(0.5))
     ann.dumps()
 
 
 @pytest.mark.parametrize("confidence", [False, True])
 def test_annotation_to_samples(confidence):
-    ann = jams.Annotation("tag_open")
+    ann = neojams.Annotation("tag_open")
 
     ann.append(time=0, duration=0.5, value="one", confidence=0.1)
     ann.append(time=0.25, duration=0.5, value="two", confidence=0.2)
@@ -1131,24 +1131,24 @@ def test_annotation_to_samples(confidence):
 
 
 def test_annotation_to_samples_fail_neg():
-    ann = jams.Annotation("tag_open")
+    ann = neojams.Annotation("tag_open")
 
     ann.append(time=0, duration=0.5, value="one", confidence=0.1)
     ann.append(time=0.25, duration=0.5, value="two", confidence=0.2)
     ann.append(time=0.75, duration=0.5, value="three", confidence=0.3)
     ann.append(time=1.5, duration=0.5, value="four", confidence=0.4)
 
-    with pytest.raises(jams.ParameterError):
+    with pytest.raises(neojams.ParameterError):
         values = ann.to_samples([-0.2, 0.4, 0.75, 1.25, 1.75, 1.4])
 
 
 def test_annotation_to_samples_fail_shape():
-    ann = jams.Annotation("tag_open")
+    ann = neojams.Annotation("tag_open")
 
     ann.append(time=0, duration=0.5, value="one", confidence=0.1)
     ann.append(time=0.25, duration=0.5, value="two", confidence=0.2)
     ann.append(time=0.75, duration=0.5, value="three", confidence=0.3)
     ann.append(time=1.5, duration=0.5, value="four", confidence=0.4)
 
-    with pytest.raises(jams.ParameterError):
+    with pytest.raises(neojams.ParameterError):
         values = ann.to_samples([[0.2, 0.4, 0.75, 1.25, 1.75, 1.4]])

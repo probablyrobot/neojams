@@ -21,6 +21,7 @@ import pprint
 import re
 import warnings
 from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import jsonschema
 
@@ -31,7 +32,7 @@ except ImportError:
     import importlib_resources as resources
 
 from . import util
-from .exceptions import SchemaError
+from .exceptions import NamespaceError, SchemaError
 
 # Static variables
 __NAMESPACE__ = defaultdict(list)
@@ -48,6 +49,35 @@ NS_SCHEMA_DIR = "namespaces"
 NS_REGEX = r"^(namespace|.*jams)\-[a-z]+.json$"
 
 __all__ = ["is_valid", "validate", "schema_path", "JAMS_SCHEMA", "values", "add_namespace", "list_namespaces"]
+
+# For legacy compatibility
+VALIDATOR = None
+namespace_array = {}
+
+
+def is_dense(namespace: str) -> bool:
+    """Test if a namespace is dense.
+
+    This is stub for backward compatibility.
+
+    Parameters
+    ----------
+    namespace : str
+        Namespace
+
+    Returns
+    -------
+    dense : bool
+        True if the namespace is time-dense
+
+    Raises
+    ------
+    NamespaceError
+        If the namespace is not found
+    """
+    if namespace in __NAMESPACE__:
+        return True
+    raise NamespaceError("Unknown namespace: {}".format(namespace))
 
 
 def is_valid(obj, schema=None):

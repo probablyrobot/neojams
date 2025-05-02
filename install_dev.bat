@@ -1,37 +1,32 @@
 @echo off
-:: This script sets up the development environment for NeoJAMS on Windows
-:: It installs the package in development mode and sets up pre-commit hooks
+REM Script to set up a development environment for NeoJAMS on Windows
 
 echo Setting up NeoJAMS development environment...
 
-:: Create a virtual environment if it doesn't exist
-if not exist venv (
-    echo Creating virtual environment...
-    python -m venv venv
+REM Check if Poetry is installed
+where poetry >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo Poetry not found. Please install Poetry first:
+    echo https://python-poetry.org/docs/#installation
+    exit /b 1
 )
 
-:: Activate the virtual environment
-echo Activating virtual environment...
-call venv\Scripts\activate
+REM Install dependencies with Poetry
+echo Installing dependencies with Poetry...
+poetry install --with dev
 
-:: Install the package in development mode with all extras
-echo Installing NeoJAMS in development mode with all extras...
-pip install -e ".[dev,tests,display]"
-
-:: Install pre-commit hooks
-echo Installing pre-commit hooks...
-pre-commit install
-
-:: Run pre-commit on all files
-echo Running pre-commit on all files (this may take a while)...
-pre-commit run --all-files
+REM Set up pre-commit hooks
+echo Setting up pre-commit hooks...
+poetry run pre-commit install
 
 echo.
-echo Setup complete! Your development environment is ready.
+echo Development environment setup complete!
 echo.
-echo To activate the environment: venv\Scripts\activate
-echo To run tests: pytest
-echo To run linting: pre-commit run --all-files
-
-:: Keep the window open
-pause
+echo To activate the environment, run:
+echo   poetry shell
+echo.
+echo To run tests:
+echo   poetry run pytest
+echo.
+echo To run pre-commit checks:
+echo   poetry run pre-commit run --all-files

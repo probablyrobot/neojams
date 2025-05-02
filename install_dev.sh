@@ -7,31 +7,25 @@ set -e  # Exit on any error
 
 echo "Setting up NeoJAMS development environment..."
 
-# Create a virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
+# Check if Poetry is installed
+if ! command -v poetry &> /dev/null; then
+    echo "Poetry not found. Please install Poetry first:"
+    echo "https://python-poetry.org/docs/#installation"
+    exit 1
 fi
 
-# Activate the virtual environment
-echo "Activating virtual environment..."
-source venv/bin/activate
+# Install dependencies with Poetry
+echo "Installing dependencies with Poetry..."
+poetry install --with dev
 
-# Install the package in development mode with all extras
-echo "Installing NeoJAMS in development mode with all extras..."
-pip install -e ".[dev,tests,display]"
+# Set up pre-commit hooks
+echo "Setting up pre-commit hooks..."
+poetry run pre-commit install
 
-# Install pre-commit hooks
-echo "Installing pre-commit hooks..."
-pre-commit install
-
-# Run pre-commit on all files
-echo "Running pre-commit on all files (this may take a while)..."
-pre-commit run --all-files
-
-echo ""
-echo "Setup complete! Your development environment is ready."
-echo ""
-echo "To activate the environment: source venv/bin/activate"
-echo "To run tests: pytest"
-echo "To run linting: pre-commit run --all-files"
+echo -e "\nDevelopment environment setup complete!"
+echo -e "\nTo activate the environment, run:"
+echo "  poetry shell"
+echo -e "\nTo run tests:"
+echo "  poetry run pytest"
+echo -e "\nTo run pre-commit checks:"
+echo "  poetry run pre-commit run --all-files"

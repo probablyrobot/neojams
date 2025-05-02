@@ -2,11 +2,11 @@
 # CREATED:2015-05-26 12:47:35 by Brian McFee <brian.mcfee@nyu.edu>
 """Namespace schema tests"""
 
-import jams
+import neojams
 import numpy as np
 import pytest
 import six
-from jams import Annotation, Observation, SchemaError
+from neojams import Annotation, Observation, SchemaError
 from test_util import srand
 
 parametrize = pytest.mark.parametrize
@@ -28,7 +28,7 @@ def test_ns_time_invalid(time, duration):
     # Bypass the safety checks in append
     ann.data.add(Observation(time=time, duration=duration, value=None, confidence=None))
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -51,7 +51,7 @@ def test_ns_beat_invalid():
     for time in np.arange(5.0):
         ann.append(time=time, duration=0.0, value="foo", confidence=None)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -92,7 +92,7 @@ def test_ns_beat_position_invalid(key, value):
     ann = Annotation(namespace="beat_position")
     ann.append(time=0, duration=1.0, value=data)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -103,7 +103,7 @@ def test_ns_beat_position_missing(key):
     ann = Annotation(namespace="beat_position")
     ann.append(time=0, duration=1.0, value=data)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -119,7 +119,7 @@ def test_ns_mood_thayer_valid():
 def test_ns_mood_thayer_invalid(value):
     ann = Annotation(namespace="mood_thayer")
     ann.append(time=0, duration=1.0, value=value)
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -166,7 +166,7 @@ def test_ns_tempo_invalid(value, confidence):
     ann = Annotation(namespace="tempo")
     ann.append(time=0, duration=0, value=value, confidence=confidence)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -191,7 +191,7 @@ def test_ns_note_hz_invalid(value):
     ann = Annotation(namespace="note_hz")
     ann.append(time=0, duration=0, value=value, confidence=0.5)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -216,7 +216,7 @@ def test_ns_pitch_hz_invalid(value):
     ann = Annotation(namespace="pitch_hz")
     ann.append(time=0, duration=0, value=value, confidence=0.5)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -241,7 +241,7 @@ def test_ns_note_midi_invalid(value):
     ann = Annotation(namespace="note_midi")
     ann.append(time=0, duration=0, value=value, confidence=0.5)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -266,7 +266,7 @@ def test_ns_pitch_midi_invalid(value):
     ann = Annotation(namespace="pitch_midi")
     ann.append(time=0, duration=0, value=value, confidence=0.5)
 
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 
@@ -323,7 +323,7 @@ def test_ns_key_mode(value):
 def test_ns_key_mode_schema_error(value):
     ann = Annotation(namespace="key_mode")
     ann.append(time=0, duration=0, value=value, confidence=None)
-    with pytest.raises(jams.SchemaError):
+    with pytest.raises(neojams.SchemaError):
         ann.validate()
 
 

@@ -1,16 +1,53 @@
 [build-system]
-requires = ["setuptools >= 61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[tool.pytest.ini_options]
-addopts = [
-    "-v",
-    "--cov-report=term-missing",
-    "--cov=neojams",
+[tool.poetry]
+name = "neojams"
+version = "0.2.0"
+description = "JAMS: A JSON Annotated Music Specification"
+authors = ["NeoJAMS development team"]
+license = "ISC"
+readme = "README.md"
+repository = "https://github.com/marl/jams"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: ISC License (ISCL)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-testpaths = [
-    "tests"
-]
+keywords = ["audio", "music", "json"]
+packages = [{include = "neojams"}]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+numpy = "^2.2.5"
+pandas = "^2.2.0"
+jsonschema = "^4.20.0"
+mir_eval = "^0.8.2"
+sortedcontainers = "^2.4.0"
+pydantic = "^2.5.3"
+decorator = "^5.1.1"
+matplotlib = "^3.8.4"
+librosa = "^0.11.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-cov = "^6.1.1"
+black = "^25.1.0"
+ruff = "^0.11.8"
+pre-commit = "^4.2.0"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "^8.2.3"
+sphinx-rtd-theme = "^3.0.2"
+
+[tool.poetry.scripts]
+pydantic-example = "examples.pydantic_example:main"
 
 [tool.black]
 line-length = 120
@@ -32,7 +69,6 @@ exclude = '''
 
 [tool.ruff]
 line-length = 120
-target-version = "py312"
 
 [tool.ruff.lint]
 select = [
@@ -52,3 +88,13 @@ ignore = []
 [tool.ruff.lint.isort]
 known-first-party = ["neojams"]
 known-third-party = ["numpy", "pandas", "matplotlib", "mir_eval", "jsonschema"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "-v",
+    "--cov-report=term-missing",
+    "--cov=neojams",
+]
+testpaths = [
+    "tests"
+]

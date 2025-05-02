@@ -20,7 +20,7 @@ from .core import (
     Sandbox,
     load,
 )
-from .exceptions import JamsError, ParameterError, SchemaError
+from .exceptions import JamsError, NamespaceError, ParameterError, SchemaError
 
 # Import the Pydantic models
 from .models import (
@@ -77,6 +77,7 @@ __all__ = [
     "Sandbox",
     "load",
     "JamsError",
+    "NamespaceError",
     "ParameterError",
     "SchemaError",
     "convert",

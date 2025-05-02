@@ -16,15 +16,14 @@ NeoJAMS requires **Python 3.12 or later**. All development work should use Pytho
    cd jams
    ```
 
-2. Create a virtual environment:
+2. Install Poetry if you don't have it:
    ```bash
-   python -m venv env
-   source env/bin/activate  # On Windows: env\Scripts\activate
+   curl -sSL https://install.python-poetry.org | python3 -
    ```
 
-3. Install development dependencies:
+3. Set up the development environment:
    ```bash
-   pip install -e ".[dev]"
+   poetry install --with dev
    ```
 
    Alternatively, you can use the convenience scripts:
@@ -34,7 +33,12 @@ NeoJAMS requires **Python 3.12 or later**. All development work should use Pytho
 
 4. Install pre-commit hooks:
    ```bash
-   pre-commit install
+   poetry run pre-commit install
+   ```
+
+5. Activate the Poetry environment:
+   ```bash
+   poetry shell
    ```
 
 ## Code Quality
@@ -48,6 +52,40 @@ NeoJAMS uses several tools to maintain code quality:
 3. **Pre-commit**: To run these checks automatically before each commit.
 
 4. **Pydantic**: For data validation and type checking.
+
+### Type Checking with Pydantic
+
+NeoJAMS uses Pydantic for runtime type checking and data validation. The models are defined in `neojams/models.py` and provide typed alternatives to the original classes. Benefits include:
+
+- Runtime validation of input data
+- Automatic type conversion where appropriate
+- Clear definitions of data structures with type annotations
+- IDE support for type hints and autocompletion
+
+Example usage:
+
+```python
+from neojams import JAMSModel, AnnotationModel, ObservationModel
+
+# Create an observation with validation
+obs = ObservationModel(time=3.0, duration=2.0, value="C:maj", confidence=0.9)
+
+# Create an annotation with validation
+ann = AnnotationModel(
+    namespace="chord",
+    data=[obs],
+    time=0.0,
+    duration=10.0
+)
+
+# Create a complete JAMS object
+jams = JAMSModel(annotations=[ann])
+
+# Validate and convert to dict
+jams_dict = jams.model_dump()
+```
+
+When developing new features, consider adding appropriate type annotations and leveraging the Pydantic models for validation.
 
 ### Ruff Rules
 
@@ -85,46 +123,12 @@ When writing code for NeoJAMS:
    - Use `super()` instead of `super(__class__, self)`
    - No need to inherit from `object` explicitly
 
-### Type Checking with Pydantic
-
-NeoJAMS uses Pydantic for runtime type checking and data validation. The models are defined in `neojams/models.py` and provide typed alternatives to the original classes. Benefits include:
-
-- Runtime validation of input data
-- Automatic type conversion where appropriate
-- Clear definitions of data structures with type annotations
-- IDE support for type hints and autocompletion
-
-Example usage:
-
-```python
-from neojams import JAMSModel, AnnotationModel, ObservationModel
-
-# Create an observation with validation
-obs = ObservationModel(time=3.0, duration=2.0, value="C:maj", confidence=0.9)
-
-# Create an annotation with validation
-ann = AnnotationModel(
-    namespace="chord",
-    data=[obs],
-    time=0.0,
-    duration=10.0
-)
-
-# Create a complete JAMS object
-jams = JAMSModel(annotations=[ann])
-
-# Validate and convert to dict
-jams_dict = jams.model_dump()
-```
-
-When developing new features, consider adding appropriate type annotations and leveraging the Pydantic models for validation.
-
 ## Testing
 
 Tests should be run with:
 
 ```bash
-pytest
+poetry run pytest
 ```
 
 ## Package Structure
@@ -134,18 +138,18 @@ The package is organized as follows:
 - `neojams/`: Main package code
 - `tests/`: Test files
 - `docs/`: Documentation
-- `scripts/`: Utility scripts
+- `examples/`: Example scripts
 
 ## Release Process
 
-1. Update version number in `neojams/version.py`
+1. Update version number in `pyproject.toml`
 2. Update HISTORY.md
 3. Create a release commit
 4. Tag the release
 5. Build and upload to PyPI:
    ```bash
-   python setup.py sdist
-   twine upload dist/*
+   poetry build
+   poetry publish
    ```
 
 ## Documentation
@@ -153,6 +157,6 @@ The package is organized as follows:
 Documentation is built with Sphinx. To build the docs:
 
 ```bash
-cd docs
-make html
+poetry install --with docs
+poetry run sphinx-build -b html docs docs/_build/html
 ```

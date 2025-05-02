@@ -16,16 +16,25 @@ JAMS are structured JSON annotations for music tracks that fully contain both th
 
 You can install the most recent release of NeoJAMS from PyPI:
 
-```
+```bash
 pip install neojams
 ```
 
-Or use the development version:
+Or with Poetry:
 
+```bash
+poetry add neojams
 ```
+
+For development installation:
+
+```bash
+# Clone the repository
 git clone https://github.com/marl/jams.git
 cd jams
-pip install -e ".[all]"
+
+# Install with Poetry
+poetry install --with dev
 ```
 
 **NeoJAMS requires Python 3.12 or later.**

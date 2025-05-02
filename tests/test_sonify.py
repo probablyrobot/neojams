@@ -1,68 +1,70 @@
 #!/usr/bin/env python
+# -*- encoding: utf-8 -*-
 # CREATED:2016-02-11 12:07:58 by Brian McFee <brian.mcfee@nyu.edu>
 """Sonification tests"""
 
-import jams
+import librosa
+import neojams
 import numpy as np
 import pytest
 from test_eval import create_hierarchy
 
 
 def test_no_sonify():
-    ann = jams.Annotation(namespace="vector")
-    with pytest.raises(jams.NamespaceError):
-        jams.sonify.sonify(ann)
+    ann = neojams.Annotation(namespace="vector")
+    with pytest.raises(neojams.NamespaceError):
+        neojams.sonify.sonify(ann)
 
 
 def test_bad_sonify():
-    ann = jams.Annotation(namespace="chord")
+    ann = neojams.Annotation(namespace="chord")
     ann.append(time=0, duration=1, value="not a chord")
 
-    with pytest.raises(jams.SchemaError):
-        jams.sonify.sonify(ann)
+    with pytest.raises(neojams.SchemaError):
+        neojams.sonify.sonify(ann)
 
 
 @pytest.mark.parametrize("ns", ["segment_open", "chord"])
 @pytest.mark.parametrize("sr", [8000, 11025])
 @pytest.mark.parametrize("duration", [None, 5.0, 1.0])
 def test_duration(ns, sr, duration):
-    ann = jams.Annotation(namespace=ns)
+    ann = neojams.Annotation(namespace=ns)
     ann.append(time=3, duration=1, value="C")
 
-    y = jams.sonify.sonify(ann, sr=sr, duration=duration)
+    y = neojams.sonify.sonify(ann, sr=sr, duration=duration)
 
     if duration is not None:
         assert len(y) == int(sr * duration)
 
 
 def test_note_hz():
-    ann = jams.Annotation(namespace="note_hz")
+    ann = neojams.Annotation(namespace="note_hz")
     ann.append(time=0, duration=1, value=261.0)
-    y = jams.sonify.sonify(ann, sr=8000, duration=2.0)
+    y = neojams.sonify.sonify(ann, sr=8000, duration=2.0)
 
     assert len(y) == 8000 * 2
 
 
 def test_note_hz_nolength():
-    ann = jams.Annotation(namespace="note_hz")
+    ann = neojams.Annotation(namespace="note_hz")
     ann.append(time=0, duration=1, value=261.0)
-    y = jams.sonify.sonify(ann, sr=8000)
+    y = neojams.sonify.sonify(ann, sr=8000)
 
     assert len(y) == 8000 * 1
     assert np.any(y)
 
 
 def test_note_midi():
-    ann = jams.Annotation(namespace="note_midi")
+    ann = neojams.Annotation(namespace="note_midi")
     ann.append(time=0, duration=1, value=60)
-    y = jams.sonify.sonify(ann, sr=8000, duration=2.0)
+    y = neojams.sonify.sonify(ann, sr=8000, duration=2.0)
 
     assert len(y) == 8000 * 2
 
 
 @pytest.fixture(scope="module")
 def ann_contour():
-    ann = jams.Annotation(namespace="pitch_contour")
+    ann = neojams.Annotation(namespace="pitch_contour")
 
     duration = 5.0
     fs = 0.01
@@ -80,7 +82,7 @@ def ann_contour():
 @pytest.mark.parametrize("duration", [None, 5.0, 10.0])
 @pytest.mark.parametrize("sr", [8000])
 def test_contour(ann_contour, duration, sr):
-    y = jams.sonify.sonify(ann_contour, sr=sr, duration=duration)
+    y = neojams.sonify.sonify(ann_contour, sr=sr, duration=duration)
     if duration is not None:
         assert len(y) == sr * duration
 
@@ -90,9 +92,9 @@ def test_contour(ann_contour, duration, sr):
 @pytest.mark.parametrize("duration", [2.0])
 @pytest.mark.parametrize("value", ["C:maj/5"])
 def test_chord(namespace, sr, duration, value):
-    ann = jams.Annotation(namespace=namespace)
+    ann = neojams.Annotation(namespace=namespace)
     ann.append(time=0.5, duration=1.0, value=value)
-    y = jams.sonify.sonify(ann, sr=sr, duration=duration)
+    y = neojams.sonify.sonify(ann, sr=sr, duration=duration)
 
     assert len(y) == sr * duration
 
@@ -101,15 +103,15 @@ def test_chord(namespace, sr, duration, value):
 @pytest.mark.parametrize("sr", [8000])
 @pytest.mark.parametrize("duration", [2.0])
 def test_event(namespace, sr, duration, value):
-    ann = jams.Annotation(namespace=namespace)
+    ann = neojams.Annotation(namespace=namespace)
     ann.append(time=0.5, duration=0, value=value)
-    y = jams.sonify.sonify(ann, sr=sr, duration=duration)
+    y = neojams.sonify.sonify(ann, sr=sr, duration=duration)
     assert len(y) == sr * duration
 
 
 @pytest.fixture(scope="module")
 def beat_pos_ann():
-    ann = jams.Annotation(namespace="beat_position")
+    ann = neojams.Annotation(namespace="beat_position")
 
     for i, t in enumerate(np.arange(0, 10, 0.25)):
         ann.append(time=t, duration=0, value=dict(position=1 + i % 4, measure=1 + i // 4, num_beats=4, beat_units=4))
@@ -119,7 +121,7 @@ def beat_pos_ann():
 @pytest.mark.parametrize("sr", [8000])
 @pytest.mark.parametrize("duration", [None, 5, 15])
 def test_beat_position(beat_pos_ann, sr, duration):
-    yout = jams.sonify.sonify(beat_pos_ann, sr=sr, duration=duration)
+    yout = neojams.sonify.sonify(beat_pos_ann, sr=sr, duration=duration)
     if duration is not None:
         assert len(yout) == duration * sr
 
@@ -132,6 +134,6 @@ def ann_hier():
 @pytest.mark.parametrize("sr", [8000])
 @pytest.mark.parametrize("duration", [None, 15, 30])
 def test_multi_segment(ann_hier, sr, duration):
-    y = jams.sonify.sonify(ann_hier, sr=sr, duration=duration)
+    y = neojams.sonify.sonify(ann_hier, sr=sr, duration=duration)
     if duration:
         assert len(y) == duration * sr

@@ -1,15 +1,17 @@
 #!/usr/bin/env python
-# CHANGED:2015-03-05 17:53:32 by Brian McFee <brian.mcfee@nyu.edu>
-"""Test the util module"""
+# -*- encoding: utf-8 -*-
+# CREATED: 2015-03-07 19:25:41 by Brian McFee <brian.mcfee@nyu.edu>
+"""Utility tests"""
+
+import json
 import os
+import six
 import sys
 import tempfile
-
 import numpy as np
-import pytest
-import six
 
-from jams import core, util
+from neojams import core, util
+import pytest
 
 
 def srand(seed=628318530):
