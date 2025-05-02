@@ -19,7 +19,7 @@ This namespace is similar to `chord_harte`, with the following modifications:
 
     * Sharps and flats may not be mixed in a note symbol.  For instance, `A#b#` is legal in `chord_harte` but
       not in `chord`.  `A###` is legal in both.
-    * The following quality values have been added: 
+    * The following quality values have been added:
         - *sus2*, *1*, *5*
         - *aug7*
         - *11*, *maj11*, *min11*
@@ -107,9 +107,9 @@ The ``value`` field is a structure containing the following fields:
 
     - Scale degrees are encoded with optional leading sharps and flats, e.g., ``V``, ``bV`` or
       ``#VII``.  Upper-case numerals indicate major, lower-case numeral indicate minor.
-    
+
     - Qualities are encoded as one of the following symbols:
-    
+
         - ``o`` : diminished (triad)
         - ``+`` : augmented (triad)
         - ``s`` : suspension
@@ -118,7 +118,7 @@ The ``value`` field is a structure containing the following fields:
         - ``x`` : fully-diminished (seventh)
     - Inversions are encoded by arabic numerals, e.g., ``V6`` for a first-inversion triad, ``V64``
       for second inversion.
-    
+
     - Applied chords are encoded by a ``/`` followed by a roman numeral encoding of the scale degree,
       e.g., ``V7/IV``.
 
@@ -143,4 +143,3 @@ The ``value`` field is a structure containing the following fields:
     above.
 
     ``confidence`` is an unconstrained field, and may contain arbitrary data.
-

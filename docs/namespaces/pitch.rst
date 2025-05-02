@@ -193,4 +193,3 @@ Numbers can be negative (for notes below ``C-1``) or fractional.
     0.000 30.000   43.02 null
     15.00 45.000   26    null
     ===== ======== ===== ==========
-

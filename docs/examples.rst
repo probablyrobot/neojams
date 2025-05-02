@@ -6,7 +6,7 @@ Storing annotations
 ===================
 
 This section demonstrates a complete use-case of JAMS for storing estimated annotations.
-The example uses `librosa <https://bmcfee.github.io/librosa/>`_ to estimate global tempo 
+The example uses `librosa <https://bmcfee.github.io/librosa/>`_ to estimate global tempo
 and beat timings.
 
 example_beat.py
@@ -80,6 +80,6 @@ In general, converting a dataset to JAMS format will require a bit more work to 
 conform to the specified namespace schema, but the import script above should serve as a simple starting
 point.
 
-For further reference, a separate repository `jams-data <https://github.com/marl/jams-data>`_ has been 
+For further reference, a separate repository `jams-data <https://github.com/marl/jams-data>`_ has been
 created to house conversion scripts for publicly available datasets.
 Note that development of converters is a work in progress, so proceed with caution!

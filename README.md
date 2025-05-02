@@ -1,12 +1,34 @@
-jams
-====
-[![PyPI](https://img.shields.io/pypi/v/jams.svg)](https://pypi.python.org/pypi/jams)
-[![License](https://img.shields.io/pypi/l/jams.svg)](https://github.com/marl/jams/blob/master/LICENSE.md)
+NeoJAMS: A JSON Annotated Music Specification
+==================================
+
+[![PyPI](https://img.shields.io/pypi/v/neojams.svg)](https://pypi.python.org/pypi/neojams)
+[![License](https://img.shields.io/github/license/marl/jams.svg)](https://github.com/marl/jams/blob/master/LICENSE.md)
 [![Build Status](https://travis-ci.org/marl/jams.svg?branch=master)](https://travis-ci.org/marl/jams)
 [![Coverage Status](https://coveralls.io/repos/marl/jams/badge.svg?branch=master)](https://coveralls.io/r/marl/jams?branch=master)
 [![Dependency Status](https://dependencyci.com/github/marl/jams/badge)](https://dependencyci.com/github/marl/jams)
+[![Python Versions](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](https://www.python.org/)
 
-A JSON Annotated Music Specification for Reproducible MIR Research.
+A Python package for working with the JAMS format, with added support for Python 3.12 and 3.13.
+
+JAMS are structured JSON annotations for music tracks that fully contain both the information and metadata for various types of annotations.
+
+## Installation
+
+You can install the most recent release of NeoJAMS from PyPI:
+
+```
+pip install neojams
+```
+
+Or use the development version:
+
+```
+git clone https://github.com/marl/jams.git
+cd jams
+pip install -e ".[all]"
+```
+
+**NeoJAMS requires Python 3.12 or later.**
 
 Please, refer to [documentation](http://jams.readthedocs.io/en/stable/) for a comprehensive
 description of JAMS.
@@ -46,6 +68,12 @@ JSON-based schema to meet the needs of the MIR community. To install, clone the
 repository into a working directory and proceed thusly.
 
 The full documentation can be found [here](http://jams.readthedocs.io/en/stable/).
+
+Development
+-----------
+NeoJAMS is compatible with Python 3.9-3.13, with special attention to compatibility with Python 3.12 and 3.13.
+
+For development setup and guidelines, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 Who
 ----

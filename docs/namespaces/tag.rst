@@ -277,7 +277,7 @@ Tags from the musical instrument subset of the AudioSet (v1) ontology.
     [sec] [sec]    string             --
     ===== ======== ================== ==========
 
-The ``value`` field is constrained to the 91 musical instruments 
+The ``value`` field is constrained to the 91 musical instruments
 of the AudioSet-instruments_ ontology.
 
 *Example*
@@ -302,7 +302,7 @@ Tags from the Free Music Archive (FMA) 16-class genre taxonomy.
     [sec] [sec]    string             --
     ===== ======== ================== ==========
 
-The ``value`` field is constrained to the 16 genres 
+The ``value`` field is constrained to the 16 genres
 of the FMA_ data-set.
 
 *Example*
@@ -371,4 +371,3 @@ The ``value`` field is constrained to one of ten strings:
     ===== ======== ============== ==========
     0.000 30.000   "street_music" null
     ===== ======== ============== ==========
-

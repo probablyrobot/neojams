@@ -138,7 +138,7 @@ Multi-level structural segmentations.
                    * level : int >= 0
     ===== ======== ================== ==========
 
-In a multi-level segmentation, the track is partitioned many times --- 
+In a multi-level segmentation, the track is partitioned many times ---
 possibly recursively --- which results in a collection of segmentations of varying degrees
 of specificity.  In the ``multi_segment`` namespace, all of the resulting segments are
 collected together, and the ``level`` field is used to encode the segment's corresponding
@@ -167,5 +167,3 @@ subsequent level value corresponds to a more refined segmentation.
     45.00 60.000   * label : c        null
                    * level : 2
     ===== ======== ================== ==========
-
-

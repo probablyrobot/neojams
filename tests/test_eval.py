@@ -1,17 +1,14 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
-'''mir_eval integration tests'''
+"""mir_eval integration tests"""
 
+import jams
 import numpy as np
 import pytest
-import jams
-
 from test_util import srand
 
 
 # Fixtures
-def create_annotation(values, namespace='beat', offset=0.0, duration=1,
-                      confidence=1):
+def create_annotation(values, namespace="beat", offset=0.0, duration=1, confidence=1):
     ann = jams.Annotation(namespace=namespace)
 
     time = np.arange(offset, offset + len(values))
@@ -23,203 +20,173 @@ def create_annotation(values, namespace='beat', offset=0.0, duration=1,
     if np.isscalar(confidence):
         confidence = [confidence] * len(time)
 
-    for t, d, v, c in zip(time, duration, values, confidence):
+    for t, d, v, c in zip(time, duration, values, confidence, strict=False):
         ann.append(time=t, duration=d, value=v, confidence=c)
 
     return ann
 
 
 def create_hierarchy(values, offset=0.0, duration=20):
-    ann = jams.Annotation(namespace='multi_segment')
+    ann = jams.Annotation(namespace="multi_segment")
 
     for level, labels in enumerate(values):
-        times = np.linspace(offset, offset + duration, num=len(labels),
-                            endpoint=False)
+        times = np.linspace(offset, offset + duration, num=len(labels), endpoint=False)
 
         durations = list(np.diff(times))
         durations.append(duration + offset - times[-1])
 
-        for t, d, v in zip(times, durations, labels):
+        for t, d, v in zip(times, durations, labels, strict=False):
             ann.append(time=t, duration=d, value=dict(label=v, level=level))
 
     return ann
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_beat():
-    return create_annotation(values=np.arange(10) % 4 + 0.5,
-                             namespace='beat')
+    return create_annotation(values=np.arange(10) % 4 + 0.5, namespace="beat")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_beat():
-    return create_annotation(values=np.arange(9) % 4 + 1,
-                             namespace='beat', offset=0.01)
+    return create_annotation(values=np.arange(9) % 4 + 1, namespace="beat", offset=0.01)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_onset():
-    return create_annotation(values=np.arange(10) % 4 + 1.,
-                             namespace='onset')
+    return create_annotation(values=np.arange(10) % 4 + 1.0, namespace="onset")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_onset():
-    return create_annotation(values=np.arange(9) % 4 + 1.,
-                             namespace='onset', offset=0.01)
+    return create_annotation(values=np.arange(9) % 4 + 1.0, namespace="onset", offset=0.01)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_chord():
-    return create_annotation(values=['C', 'E', 'G:min7'],
-                             namespace='chord')
+    return create_annotation(values=["C", "E", "G:min7"], namespace="chord")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_chord():
-    return create_annotation(values=['D', 'E', 'G:maj'],
-                             namespace='chord_harte')
+    return create_annotation(values=["D", "E", "G:maj"], namespace="chord_harte")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_roman():
-    return create_annotation(values=[{'tonic': 'C', 'chord': 'I'}],
-                             namespace='chord_roman')
+    return create_annotation(values=[{"tonic": "C", "chord": "I"}], namespace="chord_roman")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_badchord():
-    return create_annotation(values=['D', 'E', 'not at all a chord'],
-                             namespace='chord_harte', offset=0.01)
+    return create_annotation(values=["D", "E", "not at all a chord"], namespace="chord_harte", offset=0.01)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_segment():
-    return create_annotation(values=['A', 'B', 'A', 'C'],
-                             namespace='segment_open')
+    return create_annotation(values=["A", "B", "A", "C"], namespace="segment_open")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_segment():
-    return create_annotation(values=['E', 'B', 'E', 'B'],
-                             namespace='segment_open')
+    return create_annotation(values=["E", "B", "E", "B"], namespace="segment_open")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_segtut():
-    return create_annotation(values=[['F'], 'E', 'B', 'E', 'B'],
-                             namespace='segment_tut')
+    return create_annotation(values=[["F"], "E", "B", "E", "B"], namespace="segment_tut")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_tempo():
-    return create_annotation(values=[120.0, 60.0], confidence=[0.75, 0.25],
-                             namespace='tempo')
+    return create_annotation(values=[120.0, 60.0], confidence=[0.75, 0.25], namespace="tempo")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_tempo():
-    return create_annotation(values=[120.0, 80.0], confidence=[0.5, 0.5],
-                             namespace='tempo')
+    return create_annotation(values=[120.0, 80.0], confidence=[0.5, 0.5], namespace="tempo")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_badtempo():
-    return create_annotation(values=[120.0, 80.0], confidence=[-5, 1.5],
-                             namespace='tempo')
+    return create_annotation(values=[120.0, 80.0], confidence=[-5, 1.5], namespace="tempo")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_tag():
-    return create_annotation(values=['120.0', '80.0'], confidence=[0.5, 0.5],
-                             namespace='tag_open')
+    return create_annotation(values=["120.0", "80.0"], confidence=[0.5, 0.5], namespace="tag_open")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_melody():
-
     srand()
     freq = np.linspace(110.0, 440.0, 10)
     voice = np.sign(np.random.randn(len(freq)))
-    return create_annotation(values=freq * voice, confidence=1.0,
-                             duration=0.01,
-                             namespace='pitch_hz')
+    return create_annotation(values=freq * voice, confidence=1.0, duration=0.01, namespace="pitch_hz")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_melody():
-
     srand()
     freq = np.linspace(110.0, 440.0, 10)
     voice = np.sign(np.random.randn(len(freq)))
-    return create_annotation(values=freq * voice, confidence=1.0,
-                             duration=0.01,
-                             namespace='pitch_hz')
+    return create_annotation(values=freq * voice, confidence=1.0, duration=0.01, namespace="pitch_hz")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_badmelody():
-    return create_annotation(values=['a', 'b', 'c'],
-                             confidence=1.0,
-                             duration=0.01,
-                             namespace='pitch_hz')
+    return create_annotation(values=["a", "b", "c"], confidence=1.0, duration=0.01, namespace="pitch_hz")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_pattern():
-    ref_jam = jams.load('tests/fixtures/pattern_data.jams', validate=False)
-    return ref_jam.annotations['pattern_jku', 0]
+    ref_jam = jams.load("tests/fixtures/pattern_data.jams", validate=False)
+    return ref_jam.annotations["pattern_jku", 0]
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_badpattern():
-    pattern = {'midi_pitch': 3, 'morph_pitch': 5, 'staff': 1,
-               'pattern_id': None, 'occurrence_id': 1}
+    pattern = {"midi_pitch": 3, "morph_pitch": 5, "staff": 1, "pattern_id": None, "occurrence_id": 1}
 
-    return create_annotation(values=[pattern],
-                             confidence=1.0,
-                             duration=0.01,
-                             namespace='pattern_jku')
+    return create_annotation(values=[pattern], confidence=1.0, duration=0.01, namespace="pattern_jku")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_hier():
-    return create_hierarchy(values=['AB', 'abac'])
+    return create_hierarchy(values=["AB", "abac"])
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_hier():
-    return create_hierarchy(values=['ABCD', 'abacbcbd'])
+    return create_hierarchy(values=["ABCD", "abacbcbd"])
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_badhier():
     return create_hierarchy(values=[[1, 2], [1, 2, 1, 3]])
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def ref_transcript():
-    ref_jam = jams.load('tests/fixtures/transcription_ref.jams', validate=False)
-    return ref_jam.annotations['pitch_hz', 0]
+    ref_jam = jams.load("tests/fixtures/transcription_ref.jams", validate=False)
+    return ref_jam.annotations["pitch_hz", 0]
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_transcript():
-    est_jam = jams.load('tests/fixtures/transcription_est.jams', validate=False)
-    return est_jam.annotations['pitch_hz', 0]
+    est_jam = jams.load("tests/fixtures/transcription_est.jams", validate=False)
+    return est_jam.annotations["pitch_hz", 0]
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def est_badtranscript():
-    est_jam = jams.load('tests/fixtures/transcription_est.jams', validate=False)
-    ann = est_jam.annotations['pitch_hz', 0]
-    ann.append(time=2., duration=1., value=None, confidence=1)
+    est_jam = jams.load("tests/fixtures/transcription_est.jams", validate=False)
+    ann = est_jam.annotations["pitch_hz", 0]
+    ann.append(time=2.0, duration=1.0, value=None, confidence=1)
     return ann
 
 
 # Beat tracking
 def test_beat_valid(ref_beat, est_beat):
-
     jams.eval.beat(ref_beat, est_beat)
 
 
@@ -267,7 +234,6 @@ def test_segment_valid(ref_segment, est_segment):
 
 
 def test_segment_noconvert(ref_segment, est_chord):
-
     with pytest.raises(jams.NamespaceError):
         jams.eval.segment(ref_segment, est_chord)
     with pytest.raises(jams.NamespaceError):
@@ -275,7 +241,6 @@ def test_segment_noconvert(ref_segment, est_chord):
 
 
 def test_segment_invalid(ref_segment, est_segtut):
-
     with pytest.raises(jams.SchemaError):
         jams.eval.segment(ref_segment, est_segtut)
     with pytest.raises(jams.SchemaError):
@@ -303,12 +268,10 @@ def test_tempo_invalid(ref_tempo, est_badtempo):
 
 # Melody
 def test_melody_valid(ref_melody, est_melody):
-
     jams.eval.melody(ref_melody, est_melody)
 
 
 def test_melody_noconvert(ref_melody, est_tag):
-
     with pytest.raises(jams.NamespaceError):
         jams.eval.melody(ref_melody, est_tag)
     with pytest.raises(jams.NamespaceError):
@@ -328,7 +291,6 @@ def test_pattern_valid(ref_pattern):
 
 
 def test_pattern_noconvert(ref_pattern, est_beat):
-
     with pytest.raises(jams.NamespaceError):
         jams.eval.pattern(ref_pattern, est_beat)
     with pytest.raises(jams.NamespaceError):
@@ -363,12 +325,10 @@ def test_hierarchy_invalid(ref_hier, est_badhier):
 
 
 def test_transcription_valid(ref_transcript, est_transcript):
-
     jams.eval.transcription(ref_transcript, est_transcript)
 
 
 def test_transcription_invalid(ref_transcript, est_badtranscript):
-
     with pytest.raises(jams.SchemaError):
         jams.eval.transcription(ref_transcript, est_badtranscript)
     with pytest.raises(jams.SchemaError):

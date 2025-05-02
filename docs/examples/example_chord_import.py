@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-import jams
 import sys
+
+import jams
 
 
 def import_chord_jams(infile, outfile):
-
     # import_lab returns a new jams object,
     # and a handle to the newly created annotation
-    chords = jams.util.import_lab('chord', infile)
+    chords = jams.util.import_lab("chord", infile)
 
     # Infer the track duration from the end of the last annotation
     duration = max([obs.time + obs.duration for obs in chords])
@@ -25,7 +25,6 @@ def import_chord_jams(infile, outfile):
     jam.save(outfile)
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     infile, outfile = sys.argv[1:]
     import_chord_jams(infile, outfile)

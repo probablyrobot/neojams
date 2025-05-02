@@ -17,7 +17,7 @@ JAMS provides:
 
 For the most recent information, please refer to `JAMS on github <https://github.com/marl/jams>`_.
 
-.. toctree:: 
+.. toctree::
     :maxdepth: 2
 
     quickstart
@@ -28,7 +28,7 @@ For the most recent information, please refer to `JAMS on github <https://github
 *************
 API reference
 *************
-.. toctree:: 
+.. toctree::
     :maxdepth: 2
 
     jams
@@ -50,4 +50,3 @@ Changelog
     changes
 
 * :ref:`genindex`
-

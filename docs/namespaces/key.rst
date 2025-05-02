@@ -34,4 +34,3 @@ The ``value`` field is a string matching one of the three following patterns:
 .. note::
 
     ``confidence`` is an unconstrained field, and may contain arbitrary data.
-    

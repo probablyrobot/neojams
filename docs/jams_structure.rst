@@ -69,5 +69,3 @@ The ``annotation_metadata`` property has the following fields:
       annotations were collected and pre-processed; and
     * ``data_source`` : string describing the type of annotator, e.g., "program", "expert human",
       "crowdsource".
-
-

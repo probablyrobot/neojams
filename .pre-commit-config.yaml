@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        files: ^neojams/
+      - id: end-of-file-fixer
+        files: ^neojams/
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: debug-statements
+        files: ^neojams/
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        files: ^neojams/
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.1.5
+    hooks:
+      - id: ruff
+        files: ^neojams/
+        args: [--fix]
+
+  - repo: https://github.com/psf/black
+    rev: 23.11.0
+    hooks:
+      - id: black
+        files: ^neojams/

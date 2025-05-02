@@ -29,7 +29,7 @@ describe the namespace and encoding.
     {"tempo":
         {
             "value": {
-                "type": "number", 
+                "type": "number",
                 "minimum": 0
             },
             "confidence": {
@@ -53,8 +53,8 @@ Similarly, lines 7--11 specify valid contents of the `confidence` field.  Most n
 specific constraints on confidence, so this block is optional.  In the case of `tempo`, confidence must be a
 numeric value in the range `[0, 1]`.
 
-Line 12 `dense` is a boolean which specifies whether the annotation should be densely encoded during 
-serialization or not.  There is functionally no difference between dense and sparse encoding, 
+Line 12 `dense` is a boolean which specifies whether the annotation should be densely encoded during
+serialization or not.  There is functionally no difference between dense and sparse encoding,
 but dense coding is more space-efficient for high-frequency observations such as melody contours.
 
 Finally, line 13 contains a brief description of the namespace and corresponding task.
@@ -63,7 +63,7 @@ Finally, line 13 contains a brief description of the namespace and corresponding
 Local namespaces
 ================
 
-The JAMS namespace management architecture is modular and extensible, so it is relatively straightforward 
+The JAMS namespace management architecture is modular and extensible, so it is relatively straightforward
 to create a new namespace schema and add it to JAMS at run-time:
 
     >>> jams.schema.add_namespace('/path/to/my/new/namespace.json')

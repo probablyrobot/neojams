@@ -38,46 +38,46 @@ Once you've added all your data, you can serialize the annotation to a string:
 
     >>> jam.dumps(indent=2)
     {
-      "sandbox": {}, 
+      "sandbox": {},
       "annotations": [
         {
           "data": [
             {
-              "duration": 0.0, 
-              "confidence": 1.0, 
-              "value": 1.0, 
+              "duration": 0.0,
+              "confidence": 1.0,
+              "value": 1.0,
               "time": 0.33
-            }, 
+            },
             {
-              "duration": 0.0, 
-              "confidence": 1.0, 
-              "value": 1.0, 
+              "duration": 0.0,
+              "confidence": 1.0,
+              "value": 1.0,
               "time": 0.66
             }
-          ], 
+          ],
           "annotation_metadata": {
-            "annotation_tools": "", 
+            "annotation_tools": "",
             "curator": {
-              "name": "Rincewind", 
+              "name": "Rincewind",
               "email": "rincewind@unseen.edu"
-            }, 
-            "annotator": {}, 
-            "version": "", 
-            "corpus": "", 
-            "annotation_rules": "", 
-            "validation": "", 
+            },
+            "annotator": {},
+            "version": "",
+            "corpus": "",
+            "annotation_rules": "",
+            "validation": "",
             "data_source": "Well paid students"
-          }, 
-          "namespace": "beat", 
+          },
+          "namespace": "beat",
           "sandbox": {}
         }
-      ], 
+      ],
       "file_metadata": {
-        "jams_version": "0.2.0", 
-        "title": "", 
-        "identifiers": {}, 
-        "release": "", 
-        "duration": 8.0, 
+        "jams_version": "0.2.0",
+        "title": "",
+        "identifiers": {},
+        "release": "",
+        "duration": 8.0,
         "artist": ""
       }
     }

@@ -29,4 +29,3 @@
        ~{{ name }}.{{ item }}
     {%- endfor %}
     {% endblock %}
-

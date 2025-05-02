@@ -6,7 +6,7 @@ Pattern
 pattern_jku
 ~~~~~~~~~~~
 
-Each note of the pattern contains ``(pattern_id, midi_pitch, occurrence_id, morph_pitch, 
+Each note of the pattern contains ``(pattern_id, midi_pitch, occurrence_id, morph_pitch,
 staff)``, following the format described in [4]_.
 
     +-------+----------+------------------+------------+
@@ -19,7 +19,7 @@ staff)``, following the format described in [4]_.
     |       |          | - staff          |            |
     +-------+----------+------------------+------------+
 
-.. [4] Collins T., Discovery of Repeated Themes & Sections, Music Information Retrieval 
+.. [4] Collins T., Discovery of Repeated Themes & Sections, Music Information Retrieval
     Evalaluation eXchange (MIReX), 2013 (Accessed on July 7th 2015). Available `here
     <http://www.music-ir.org/mirex/wiki/2013:Discovery_of_Repeated_Themes_&_Sections>`_.
 
@@ -64,4 +64,3 @@ Each ``value`` field contains a dictionary with the following keys:
     |       |          | - morph_pitch: 65  |            |
     |       |          | - staff: 0         |            |
     +-------+----------+--------------------+------------+
-

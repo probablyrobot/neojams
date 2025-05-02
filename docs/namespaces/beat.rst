@@ -61,7 +61,7 @@ The ``value`` field is a structure containing the following fields:
     integer.
   - ``num_beats`` : the number of beats per measure : can be any strictly positive
     integer.
-  - ``beat_units`` : the note value for beats in this measure.  Must be one of: 
+  - ``beat_units`` : the note value for beats in this measure.  Must be one of:
     ``1, 2, 4, 8, 16, 32, 64, 128, 256``.
 
 All fields are required for each observation.

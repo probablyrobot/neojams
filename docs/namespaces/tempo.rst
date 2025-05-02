@@ -8,7 +8,7 @@ Tempo measurements in beats per minute (BPM).
     ===== ======== ====== ==========
     time  duration value  confidence
     ===== ======== ====== ==========
-    [sec] [sec]    number number          
+    [sec] [sec]    number number
     ===== ======== ====== ==========
 
 The ``value`` field is a non-negative number (floating point), indicated the tempo measurement.
@@ -29,4 +29,3 @@ The ``confidence`` field is a number in the range ``[0, 1]``, following the form
 .. note::
     MIREX requires that tempo measurements come in pairs, and that the confidence values sum to 1.
     This is not enforced at the schema level.
-

@@ -7,7 +7,7 @@ v0.3.4
 - Added support for jsonschema version 3.0 (`PR #202
   <https://github.com/marl/jams/pull/202>`_)
 
-- Added converter script `jams_to_mirex_pattern.py` (`PR #194 
+- Added converter script `jams_to_mirex_pattern.py` (`PR #194
   <https://github.com/marl/jams/pull/194>`_)
 
 v0.3.3
@@ -54,11 +54,11 @@ v0.3.0
 
 - Fixed a JSON serialization bug with numpy datatypes
   (`PR #160 <https://github.com/marl/jams/pull/160>`_)
-  
+
 v0.2.3
 ------
 
-- Deprecated the `JamsFrame` class 
+- Deprecated the `JamsFrame` class
   (`PR #153 <https://github.com/marl/jams/pull/153>`_):
 
   - Moved `JamsFrame.to_interval_values()` to `Annotation.to_interval_values()`
@@ -68,7 +68,7 @@ v0.2.3
 
 - Forward compatibility with 0.3.0
   (`PR #153 <https://github.com/marl/jams/pull/153>`_):
-  
+
   - Added the `jams.Observation` type
 
   - Added iteration support to `Annotation` objects
@@ -134,4 +134,3 @@ Bug fixes
   - Appending data to ``Annotation`` or ``JamsFrame`` objects now fails if ``time`` or ``duration`` are
     ill-specified.
     (`PR #87 <https://github.com/marl/jams/pull/87>`_).
-

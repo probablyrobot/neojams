@@ -27,4 +27,3 @@ Namespace definitions
 .. include:: namespaces/tempo.rst
 
 .. include:: namespaces/misc.rst
-
