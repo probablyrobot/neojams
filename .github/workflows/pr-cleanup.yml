@@ -1,0 +1,14 @@
+name: PR Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-pr-caches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete PR caches
+        uses: snnaplab/delete-branch-cache-action@v1
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge 

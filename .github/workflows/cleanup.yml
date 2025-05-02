@@ -1,0 +1,29 @@
+name: Cleanup Old Workflow Runs and Caches
+
+on:
+  schedule:
+    # Run at 1:00 AM UTC every Sunday
+    - cron: '0 1 * * 0'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  delete-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 14
+          keep_minimum_runs: 3
+          
+  purge-caches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge old caches
+        uses: MyAlbum/purge-cache@v2
+        with:
+          max-age: 604800  # One week in seconds
+          token: ${{ github.token }}
+          debug: true 
