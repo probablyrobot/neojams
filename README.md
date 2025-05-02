@@ -7,6 +7,7 @@ NeoJAMS: A JSON Annotated Music Specification
 [![Coverage Status](https://coveralls.io/repos/marl/jams/badge.svg?branch=master)](https://coveralls.io/r/marl/jams?branch=master)
 [![Dependency Status](https://dependencyci.com/github/marl/jams/badge)](https://dependencyci.com/github/marl/jams)
 [![Python Versions](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](https://www.python.org/)
+[![Tests](https://github.com/probablyrobot/neojams/actions/workflows/test.yml/badge.svg)](https://github.com/probablyrobot/neojams/actions/workflows/test.yml)
 
 A Python package for working with the JAMS format, with added support for Python 3.12 and 3.13.
 
