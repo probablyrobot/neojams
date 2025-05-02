@@ -15,7 +15,6 @@ NeoJAMS schema validation
     list_namespaces
 """
 
-import contextlib
 import json
 import os
 import pprint
@@ -316,20 +315,20 @@ def __load_jams_schema():
     """Load the jams schema file"""
 
     # Try to read from the resource bundle first
-    with contextlib.ExitStack() as es:
-        try:
-            fdesc = es.enter_context(resources.open_text("neojams", "schemata/jams_schema.json"))
+    try:
+        schema_path = resources.files("neojams") / "schemata" / "jams_schema.json"
+        with open(schema_path) as fdesc:
             jams_schema = json.load(fdesc)
-        except (resources.errors.ResourceError, ModuleNotFoundError, ValueError, FileNotFoundError):
-            abs_schema_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), __RESOURCE_SCHEMA_DIR))
-            schema_file = os.path.join(abs_schema_dir, "jams_schema.json")
-            with open(schema_file) as fdesc:
-                jams_schema = json.load(fdesc)
+    except (FileNotFoundError, ModuleNotFoundError, ValueError):
+        abs_schema_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), __RESOURCE_SCHEMA_DIR))
+        schema_file = os.path.join(abs_schema_dir, "jams_schema.json")
+        with open(schema_file) as fdesc:
+            jams_schema = json.load(fdesc)
 
-        if jams_schema is None:
-            warnings.warn("Unable to locate JAMS schema. " "Validation will not be available.", stacklevel=2)
+    if jams_schema is None:
+        warnings.warn("Unable to locate JAMS schema. " "Validation will not be available.", stacklevel=2)
 
-        return jams_schema
+    return jams_schema
 
 
 # Create the global schema mapping object

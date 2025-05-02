@@ -21,6 +21,29 @@ from .core import (
     load,
 )
 from .exceptions import JamsError, ParameterError, SchemaError
+
+# Import the Pydantic models
+from .models import (
+    JAMS as JAMSModel,
+)
+from .models import (
+    Annotation as AnnotationModel,
+)
+from .models import (
+    AnnotationMetadata as AnnotationMetadataModel,
+)
+from .models import (
+    Curator as CuratorModel,
+)
+from .models import (
+    FileMetadata as FileMetadataModel,
+)
+from .models import (
+    Observation as ObservationModel,
+)
+from .models import (
+    Sandbox as SandboxModel,
+)
 from .nsconvert import convert
 from .schema import list_namespaces
 from .version import version as __version__
@@ -59,4 +82,12 @@ __all__ = [
     "convert",
     "list_namespaces",
     "__version__",
+    # Pydantic models
+    "JAMSModel",
+    "AnnotationModel",
+    "AnnotationMetadataModel",
+    "CuratorModel",
+    "FileMetadataModel",
+    "ObservationModel",
+    "SandboxModel",
 ]

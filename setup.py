@@ -57,6 +57,7 @@ setup(
         "jsonschema >= 4.0.0",
         "mir_eval >= 0.7",
         "sortedcontainers >= 2.4.0",
+        "pydantic >= 2.5.0",
     ],
     python_requires=">=3.12",
 )

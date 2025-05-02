@@ -47,6 +47,8 @@ NeoJAMS uses several tools to maintain code quality:
 
 3. **Pre-commit**: To run these checks automatically before each commit.
 
+4. **Pydantic**: For data validation and type checking.
+
 ### Ruff Rules
 
 The following Ruff rules are enabled:
@@ -82,6 +84,40 @@ When writing code for NeoJAMS:
 5. Use modern class syntax:
    - Use `super()` instead of `super(__class__, self)`
    - No need to inherit from `object` explicitly
+
+### Type Checking with Pydantic
+
+NeoJAMS uses Pydantic for runtime type checking and data validation. The models are defined in `neojams/models.py` and provide typed alternatives to the original classes. Benefits include:
+
+- Runtime validation of input data
+- Automatic type conversion where appropriate
+- Clear definitions of data structures with type annotations
+- IDE support for type hints and autocompletion
+
+Example usage:
+
+```python
+from neojams import JAMSModel, AnnotationModel, ObservationModel
+
+# Create an observation with validation
+obs = ObservationModel(time=3.0, duration=2.0, value="C:maj", confidence=0.9)
+
+# Create an annotation with validation
+ann = AnnotationModel(
+    namespace="chord",
+    data=[obs],
+    time=0.0,
+    duration=10.0
+)
+
+# Create a complete JAMS object
+jams = JAMSModel(annotations=[ann])
+
+# Validate and convert to dict
+jams_dict = jams.model_dump()
+```
+
+When developing new features, consider adding appropriate type annotations and leveraging the Pydantic models for validation.
 
 ## Testing
 
