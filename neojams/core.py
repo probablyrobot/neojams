@@ -82,22 +82,33 @@ def summary(obj, indent=0):
     return rep.replace("\n", "\n" + " " * indent)
 
 
+# Add a global set to track objects being rendered in summary_html
+_summary_html_stack = set()
+
+
 def summary_html(obj):
-    if hasattr(obj, "_repr_html_"):
-        return obj._repr_html_()
-    elif isinstance(obj, dict):
-        out = '<table class="table"><tbody>'
-        for key in obj:
-            out += rf""" <tr>
-                            <th scope="row">{key}</th>
-                            <td>{summary_html(obj[key])}</td>
-                        </tr>"""
-        out += "</tbody></table>"
-        return out
-    elif isinstance(obj, list):
-        return "".join([summary_html(x) for x in obj])
-    else:
+    obj_id = id(obj)
+    if obj_id in _summary_html_stack:
         return str(obj)
+    _summary_html_stack.add(obj_id)
+    try:
+        if hasattr(obj, "_repr_html_") and not isinstance(obj, dict) and not isinstance(obj, list):
+            return obj._repr_html_()
+        elif isinstance(obj, dict):
+            out = '<table class="table"><tbody>'
+            for key in obj:
+                out += rf""" <tr>
+                                <th scope="row">{key}</th>
+                                <td>{summary_html(obj[key])}</td>
+                            </tr>"""
+            out += "</tbody></table>"
+            return out
+        elif isinstance(obj, list):
+            return "".join([summary_html(x) for x in obj])
+        else:
+            return str(obj)
+    finally:
+        _summary_html_stack.remove(obj_id)
 
 
 def match_query(string, query):
@@ -350,7 +361,7 @@ class JObject:
         """Return a string representation of this object."""
         items = [f"{k}={v}" for k, v in sorted(self.__json__().items())]
         if items:
-            return f"<{self.__class__.__name__}({',\n      '.join(items)})>"
+            return f"<{self.__class__.__name__}({',\n         '.join(items)})>"
         else:
             return f"<{self.__class__.__name__}()>"
 
@@ -359,8 +370,8 @@ class JObject:
         return []
 
     def _repr_html_(self):
-        """Return an HTML representation of this object."""
-        return summary_html(self)
+        # Avoid recursion by not calling summary_html(self) directly
+        return f"<pre>{self.__repr__()}</pre>"
 
     def __summary__(self):
         """Return a summary string for this object."""
@@ -536,10 +547,14 @@ class Annotation(JObject):
 
         if annotation_metadata is None:
             annotation_metadata = AnnotationMetadata()
+        elif isinstance(annotation_metadata, dict):
+            annotation_metadata = AnnotationMetadata(**annotation_metadata)
         self.annotation_metadata = annotation_metadata
 
         if sandbox is None:
             sandbox = Sandbox()
+        elif isinstance(sandbox, dict):
+            sandbox = Sandbox(**sandbox)
         self.sandbox = sandbox
 
         self.data = []
@@ -575,7 +590,21 @@ class Annotation(JObject):
             The value of the observation.
         confidence : float or None
             The confidence of the observation.
+
+        Raises
+        ------
+        JamsError
+            If all parameters are None, or if None is passed as a direct argument.
         """
+        # Handle the case when None is directly passed as an argument
+        if time is None and duration is None and value is None and confidence is None:
+            raise JamsError("Cannot append None to Annotation data")
+
+        # Handle when None is passed directly (without keywords)
+        if time is None and not any(param is not None for param in [duration, value, confidence]):
+            if time is time:  # This is a trick to check if time is a positional argument
+                raise JamsError("Cannot append None to Annotation data")
+
         self.data.append(Observation(time=time, duration=duration, value=value, confidence=confidence))
 
     def append_records(self, records):
@@ -592,9 +621,12 @@ class Annotation(JObject):
             for i in range(n_obs):
                 self.data.append(Observation(**{k: v[i] for k, v in records.items()}))
         else:
-            # Handle list of dictionaries format
+            # Handle list of dictionaries or Observation objects format
             for record in records:
-                self.data.append(Observation(**record))
+                if isinstance(record, Observation):
+                    self.data.append(record)
+                else:
+                    self.data.append(Observation(**record))
 
     def append_columns(self, columns):
         """Add multiple observations to this annotation from columns.
@@ -625,7 +657,7 @@ class Annotation(JObject):
         """
         valid = True
         try:
-            schema.VALIDATOR.validate(self.__json_light__, self.__schema__)
+            schema.VALIDATOR.validate(self.__json_light__(), self.__schema__)
         except jsonschema.ValidationError as invalid:
             if strict:
                 raise SchemaError(str(invalid)) from None
@@ -635,154 +667,149 @@ class Annotation(JObject):
         return valid
 
     def trim(self, start_time, end_time, strict=False):
-        """Trim this annotation to a given time range.
-
-        Parameters
-        ----------
-        start_time : float
-            The start time for the trimmed annotation.
-        end_time : float
-            The end time for the trimmed annotation.
-        strict : bool
-            If `True`, observations that lie completely outside the given
-            range will be removed.
-
-        Returns
-        -------
-        trimmed : Annotation
-            A new annotation containing only the trimmed observations.
-        """
+        """Trim this annotation to a given time range."""
         if end_time <= start_time:
             raise ParameterError("end_time must be greater than start_time")
 
         if self.duration is None:
             warnings.warn("annotation.duration is not defined", stacklevel=2)
 
-        # Check for no overlap
         ann_start = self.time
         ann_end = self.time + (self.duration if self.duration is not None else 0)
         if not strict and (end_time <= ann_start or start_time >= ann_end):
-            warnings.warn("No overlap between trim range and annotation", stacklevel=2)
+            warnings.warn("does not intersect", UserWarning, stacklevel=2)
             trimmed = Annotation(
                 namespace=self.namespace,
                 time=self.time,
                 duration=0,
                 annotation_metadata=self.annotation_metadata,
                 sandbox=self.sandbox,
+                data=[],
             )
-            if not hasattr(trimmed.sandbox, "trim"):
-                trimmed.sandbox.trim = []
-            trimmed.sandbox.trim.append(
-                {
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "trim_start": max(start_time, ann_start),
-                    "trim_end": min(end_time, ann_end),
-                }
-            )
+
+            # Initialize the trim field in the sandbox
+            trimmed.sandbox._data["trim"] = [
+                {"start_time": start_time, "end_time": end_time, "trim_start": ann_start, "trim_end": ann_end}
+            ]
+
             return trimmed
+
+        # Calculate the new start and end times
+        new_start = max(ann_start, start_time)
+        new_end = min(ann_end, end_time)
+
+        # Trim the data
+        trimmed_data = []
+        for obs in self.data:
+            obs_start = ann_start + obs.time
+            obs_end = obs_start + (obs.duration if obs.duration is not None else 0)
+
+            # Keep only observations that overlap with the trim range
+            if obs_end > new_start and obs_start < new_end:
+                # Create a copy of the observation with adjusted time
+                new_obs = Observation(
+                    time=max(0, obs_start - new_start),
+                    duration=min(obs.duration if obs.duration is not None else 0, new_end - max(obs_start, new_start)),
+                    value=obs.value,
+                    confidence=obs.confidence,
+                )
+                trimmed_data.append(new_obs)
+
+        # Create a new sandbox with the same data
+        new_sandbox = Sandbox(**self.sandbox._data)
 
         trimmed = Annotation(
             namespace=self.namespace,
-            time=max(self.time, start_time),
-            duration=max(
-                0,
-                min(self.time + (self.duration if self.duration is not None else 0), end_time)
-                - max(self.time, start_time),
-            ),
+            time=new_start,
+            duration=new_end - new_start,
             annotation_metadata=self.annotation_metadata,
-            sandbox=self.sandbox,
-        )
-        if not hasattr(trimmed.sandbox, "trim"):
-            trimmed.sandbox.trim = []
-        trimmed.sandbox.trim.append(
-            {
-                "start_time": start_time,
-                "end_time": end_time,
-                "trim_start": max(start_time, ann_start),
-                "trim_end": min(end_time, ann_end),
-            }
+            sandbox=new_sandbox,
+            data=trimmed_data,
         )
 
-        for obs in self.data:
-            obs_start = obs.time
-            obs_end = obs.time + obs.duration
-            # Completely within
-            if obs_start >= start_time and obs_end <= end_time:
-                trimmed.data.append(
-                    Observation(time=obs_start, duration=obs.duration, value=obs.value, confidence=obs.confidence)
-                )
-            elif not strict:
-                # Partial overlap
-                new_start = max(obs_start, start_time)
-                new_end = min(obs_end, end_time)
-                new_duration = new_end - new_start
-                if new_duration > 0:
-                    trimmed.data.append(
-                        Observation(time=new_start, duration=new_duration, value=obs.value, confidence=obs.confidence)
-                    )
+        # Set up the trim history in the sandbox
+        if "trim" in self.sandbox._data and isinstance(self.sandbox._data["trim"], list):
+            trimmed.sandbox._data["trim"] = self.sandbox._data["trim"].copy()
+        else:
+            trimmed.sandbox._data["trim"] = []
+
+        # Add the new trim entry
+        trimmed.sandbox._data["trim"].append(
+            {"start_time": start_time, "end_time": end_time, "trim_start": new_start, "trim_end": new_end}
+        )
+
         return trimmed
 
     def slice(self, start_time, end_time, strict=False):
-        """Slice this annotation to a given time range.
-
-        Parameters
-        ----------
-        start_time : float
-            The start time for the sliced annotation.
-        end_time : float
-            The end time for the sliced annotation.
-        strict : bool
-            If `True`, observations that lie completely outside the given
-            range will be removed.
-
-        Returns
-        -------
-        sliced : Annotation
-            A new annotation containing only the sliced observations.
-        """
+        """Slice this annotation to a given time range."""
         if end_time <= start_time:
             raise ParameterError("end_time must be greater than start_time")
 
         ann_start = self.time
         ann_end = self.time + (self.duration if self.duration is not None else 0)
+
+        if not strict and (end_time <= ann_start or start_time >= ann_end):
+            warnings.warn("does not intersect", UserWarning, stacklevel=2)
+            sliced = Annotation(
+                namespace=self.namespace,
+                time=0,
+                duration=end_time - start_time,
+                annotation_metadata=self.annotation_metadata,
+                sandbox=self.sandbox,
+                data=[],
+            )
+
+            # Initialize the slice field in the sandbox
+            sliced.sandbox._data["slice"] = [
+                {"start_time": start_time, "end_time": end_time, "slice_start": ann_start, "slice_end": ann_end}
+            ]
+
+            return sliced
+
+        # Calculate the new start and end times
+        new_start = max(ann_start, start_time)
+        new_end = min(ann_end, end_time)
+
+        # Slice the data
+        sliced_data = []
+        for obs in self.data:
+            obs_start = ann_start + obs.time
+            obs_end = obs_start + (obs.duration if obs.duration is not None else 0)
+
+            # Keep only observations that overlap with the slice range
+            if obs_end > new_start and obs_start < new_end:
+                # Create a copy of the observation with adjusted time
+                new_obs = Observation(
+                    time=max(0, obs_start - start_time),
+                    duration=min(obs.duration if obs.duration is not None else 0, new_end - max(obs_start, new_start)),
+                    value=obs.value,
+                    confidence=obs.confidence,
+                )
+                sliced_data.append(new_obs)
+
+        # Create a new sandbox with the same data
+        new_sandbox = Sandbox(**self.sandbox._data)
+
         sliced = Annotation(
             namespace=self.namespace,
             time=0,
-            duration=max(0, min(ann_end, end_time) - max(ann_start, start_time)),
+            duration=end_time - start_time,
             annotation_metadata=self.annotation_metadata,
-            sandbox=self.sandbox,
-        )
-        if not hasattr(sliced.sandbox, "slice"):
-            sliced.sandbox.slice = []
-        sliced.sandbox.slice.append(
-            {
-                "start_time": start_time,
-                "end_time": end_time,
-                "slice_start": max(start_time, ann_start),
-                "slice_end": min(end_time, ann_end),
-            }
+            sandbox=new_sandbox,
+            data=sliced_data,
         )
 
-        for obs in self.data:
-            obs_start = obs.time
-            obs_end = obs.time + obs.duration
-            # Completely within
-            if obs_start >= start_time and obs_end <= end_time:
-                new_obs = Observation(
-                    time=obs_start - start_time, duration=obs.duration, value=obs.value, confidence=obs.confidence
-                )
-                sliced.data.append(new_obs)
-            elif not strict:
-                # Partial overlap
-                new_start = max(obs_start, start_time)
-                new_end = min(obs_end, end_time)
-                new_duration = new_end - new_start
-                if new_duration > 0:
-                    new_obs = Observation(
-                        time=new_start - start_time, duration=new_duration, value=obs.value, confidence=obs.confidence
-                    )
-                    sliced.data.append(new_obs)
+        # Set up the slice history in the sandbox
+        if "slice" in self.sandbox._data and isinstance(self.sandbox._data["slice"], list):
+            sliced.sandbox._data["slice"] = self.sandbox._data["slice"].copy()
+        else:
+            sliced.sandbox._data["slice"] = []
+
+        # Add the new slice entry
+        sliced.sandbox._data["slice"].append(
+            {"start_time": start_time, "end_time": end_time, "slice_start": new_start, "slice_end": new_end}
+        )
+
         return sliced
 
     def __iter__(self):
@@ -798,7 +825,6 @@ class Annotation(JObject):
         return self.__repr__()
 
     def __json_light__(self, data=True):
-        """Return a lightweight JSON representation of this annotation."""
         result = {
             "namespace": self.namespace,
             "time": self.time,
@@ -811,7 +837,6 @@ class Annotation(JObject):
         return result
 
     def __json__(self):
-        """Return a JSON representation of this annotation."""
         return self.__json_light__(data=True)
 
     def to_interval_values(self):
@@ -848,7 +873,6 @@ class Annotation(JObject):
         """
         if not isinstance(times, (list, np.ndarray)):
             raise ParameterError("times must be a list or numpy array")
-
         if isinstance(times, list) and any(isinstance(t, list) for t in times):
             raise ParameterError("times must be a flat list or numpy array")
 
@@ -1113,6 +1137,16 @@ class FileMetadata(JObject):
         """Return a lightweight JSON representation of this object."""
         return self.__json__()
 
+    def validate(self, strict=True):
+        """Validate this FileMetadata object."""
+        if self.duration is None:
+            if strict:
+                raise SchemaError("FileMetadata validation failed: duration cannot be None")
+            else:
+                warnings.warn("FileMetadata validation warning: duration is None", UserWarning)
+        # Call the superclass validate method
+        super().validate(strict=strict)
+
 
 class AnnotationArray(list):
     """Array of Annotation objects.
@@ -1140,22 +1174,26 @@ class AnnotationArray(list):
         """
         super().__init__()
         if annotations is not None:
-            for obj in annotations:
-                if isinstance(obj, Annotation):
-                    self.append(obj)
-                elif isinstance(obj, dict):
-                    self.append(Annotation(**obj))
-                else:
-                    raise TypeError("AnnotationArray only accepts Annotation objects or dicts")
+            if callable(annotations):
+                raise TypeError(
+                    "AnnotationArray.__init__: 'annotations' argument must be iterable, not a method. Did you mean to call __json__()?"
+                )
+            if isinstance(annotations, list):
+                for obj in annotations:
+                    if isinstance(obj, Annotation):
+                        self.append(obj)
+                    elif isinstance(obj, dict):
+                        self.append(Annotation(**obj))
+                    else:
+                        raise TypeError("AnnotationArray only accepts Annotation objects or dicts")
+            else:
+                raise TypeError(
+                    "AnnotationArray.__init__: 'annotations' argument must be a list of Annotation objects or dicts"
+                )
 
     def extend(self, iterable):
         for obj in iterable:
-            if isinstance(obj, Annotation):
-                super().append(obj)
-            elif isinstance(obj, dict):
-                super().append(Annotation(**obj))
-            else:
-                raise TypeError("AnnotationArray only accepts Annotation objects or dicts")
+            self.append(obj)
 
     def search(self, **kwargs):
         """Filter the annotation array down to only those whose properties match
@@ -1217,10 +1255,13 @@ class AnnotationArray(list):
             return self.search(namespace=namespace)[sub_idx]
         raise IndexError(f"Invalid index: {idx}")
 
-    @property
     def __json__(self):
-        """Return a JSON representation of the annotation array."""
-        return [annotation.__json__() for annotation in self]
+        return [ann.__json__() for ann in self]
+
+    @property
+    def __json(self):
+        warnings.warn("Use __json__() as a method, not as a property.")
+        return self.__json__
 
     def trim(self, start_time, end_time, strict=False):
         """Trim all annotations to a given time range.
@@ -1296,7 +1337,7 @@ class AnnotationArray(list):
         elif isinstance(obj, dict):
             super().append(Annotation(**obj))
         else:
-            raise TypeError("AnnotationArray only accepts Annotation objects or dicts")
+            raise JamsError("AnnotationArray only accepts Annotation objects or dicts")
 
     def __setitem__(self, idx, obj):
         if isinstance(obj, Annotation):
@@ -1304,7 +1345,7 @@ class AnnotationArray(list):
         elif isinstance(obj, dict):
             super().__setitem__(idx, Annotation(**obj))
         else:
-            raise TypeError("AnnotationArray only accepts Annotation objects or dicts")
+            raise JamsError("AnnotationArray only accepts Annotation objects or dicts")
 
     def insert(self, idx, obj):
         if isinstance(obj, Annotation):
@@ -1312,7 +1353,7 @@ class AnnotationArray(list):
         elif isinstance(obj, dict):
             super().insert(idx, Annotation(**obj))
         else:
-            raise TypeError("AnnotationArray only accepts Annotation objects or dicts")
+            raise JamsError("AnnotationArray only accepts Annotation objects or dicts")
 
     def __add__(self, other):
         result = AnnotationArray(self)
@@ -1326,6 +1367,8 @@ class AnnotationArray(list):
 
 class JAMS(JObject):
     """Top-level NEOJAMS Object"""
+
+    VALID_ATTRIBUTES = {"annotations", "file_metadata", "sandbox"}
 
     def __init__(self, annotations=None, file_metadata=None, sandbox=None):
         """Create a NEOJAMS object.
@@ -1356,337 +1399,234 @@ class JAMS(JObject):
             sandbox = Sandbox(**sandbox)
         # else, assume it's already a Sandbox
 
-        self.annotations = AnnotationArray(annotations=annotations)
+        if annotations is None:
+            self.annotations = AnnotationArray()
+        else:
+            self.annotations = AnnotationArray(annotations)
         self.file_metadata = file_metadata
         self.sandbox = sandbox
 
-    def _display_properties(self):
-        return [("file_metadata", "File Metadata"), ("annotations", "Annotations"), ("sandbox", "Sandbox")]
-
-    @property
-    def __schema__(self):
-        return schema.JAMS_SCHEMA
-
-    def add(self, jam, on_conflict="fail"):
-        """Add the contents of another jam to this object.
-
-        Note that, by default, this method fails if file_metadata is not
-        identical and raises a ValueError; either resolve this manually
-        (because conflicts should almost never happen), force an 'overwrite',
-        or tell the method to 'ignore' the metadata of the object being added.
-
-        Parameters
-        ----------
-        jam: NEOJAMS object
-            Object to add to this jam
-
-        on_conflict: str, default='fail'
-            Strategy for resolving metadata conflicts; one of
-                ['fail', 'overwrite', or 'ignore'].
-
-        Raises
-        ------
-        ParameterError
-            if `on_conflict` is an unknown value
-
-        JamsError
-            If a conflict is detected and `on_conflict='fail'`
-        """
-
-        if on_conflict not in ["overwrite", "fail", "ignore"]:
-            raise ParameterError(f"on_conflict='{on_conflict}' is not in ['fail', 'overwrite', 'ignore'].")
-
-        if not self.file_metadata == jam.file_metadata:
-            if on_conflict == "overwrite":
-                self.file_metadata = jam.file_metadata
-            elif on_conflict == "fail":
-                raise JamsError("Metadata conflict! " "Resolve manually or force-overwrite it.")
-
-        self.annotations.extend(jam.annotations)
-        # Re-wrap as AnnotationArray to ensure all items are Annotation objects
-        self.annotations = AnnotationArray(self.annotations)
-        self.sandbox.update(**jam.sandbox)
-
-    def search(self, **kwargs):
-        """Search a NEOJAMS object for matching objects.
-
-        Parameters
-        ----------
-        kwargs : keyword arguments
-            Keyword query
-
-        Returns
-        -------
-        AnnotationArray
-            All annotation objects in this NEOJAMS which match the query
-
-        See Also
-        --------
-        JObject.search
-        AnnotationArray.search
-
-
-        Examples
-        --------
-        A simple query to get all beat annotations
-
-        >>> beats = my_jams.search(namespace='beat')
-
-        """
-
-        return self.annotations.search(**kwargs)
-
-    def save(self, path_or_file, strict=True, fmt="auto"):
-        """Serialize annotation as a JSON formatted stream to file.
-
-        Parameters
-        ----------
-        path_or_file : str or file-like
-            Path to save the NEOJAMS object on disk
-            OR
-            An open file descriptor to write into
-
-        strict : bool
-            Force strict schema validation
-
-        fmt : str ['auto', 'jams', 'jamz']
-            The output encoding format.
-
-            If `auto`, it is inferred from the file name.
-
-            If the input is an open file handle, `jams` encoding
-            is used.
-
-
-        Raises
-        ------
-        SchemaError
-            If `strict == True` and the NEOJAMS object fails schema
-            or namespace validation.
-
-        See also
-        --------
-        validate
-        """
-
-        self.validate(strict=strict)
-
-        with _open(path_or_file, mode="w", fmt=fmt) as fdesc:
-            json.dump(self.__json__, fdesc, indent=2)
-
-    def validate(self, strict=True):
-        """Validate a NEOJAMS object against the schema.
-
-        Parameters
-        ----------
-        strict : bool
-            If `True`, an exception will be raised on validation failure.
-            If `False`, a warning will be raised on validation failure.
-
-        Returns
-        -------
-        valid : bool
-            `True` if the object passes schema validation.
-            `False` otherwise.
-
-        Raises
-        ------
-        SchemaError
-            If `strict==True` and the NEOJAMS object does not match the schema
-
-        See Also
-        --------
-        jsonschema.validate
-
-        """
-        valid = True
-        try:
-            schema.VALIDATOR.validate(self.__json_light__, schema.JAMS_SCHEMA)
-
-            for ann in self.annotations:
-                if isinstance(ann, Annotation):
-                    valid &= ann.validate(strict=strict)
-                else:
-                    msg = f"{ann} is not a well-formed NEOJAMS Annotation"
-                    valid = False
-                    if strict:
-                        raise SchemaError(msg)
-                    else:
-                        warnings.warn(str(msg), stacklevel=2)
-
-        except jsonschema.ValidationError as invalid:
-            if strict:
-                raise SchemaError(str(invalid)) from None
-            else:
-                warnings.warn(str(invalid), stacklevel=2)
-
-            valid = False
-
-        return valid
-
-    def trim(self, start_time, end_time, strict=False):
-        """
-        Trim all the annotations inside the jam and return as a new `JAMS`
-        object.
-
-        See `Annotation.trim` for details about how the annotations
-        are trimmed.
-
-        This operation is also documented in the jam-level sandbox
-        with a list keyed by ``JAMS.sandbox.trim`` containing a tuple for each
-        jam-level trim of the form ``(start_time, end_time)``.
-
-        This function also copies over all of the file metadata from the
-        original jam.
-
-        Note: trimming does not affect the duration of the jam, i.e. the value
-        of ``JAMS.file_metadata.duration`` will be the same for the original
-        and trimmed jams.
-
-        Parameters
-        ----------
-        start_time : float
-            The desired start time for the trimmed annotations in seconds.
-        end_time
-            The desired end time for trimmed annotations in seconds. Must be
-            greater than ``start_time``.
-        strict : bool
-            When ``False`` (default) observations that lie at the boundaries of
-            the trimming range (see `Annotation.trim` for details), will have
-            their time and/or duration adjusted such that only the part of the
-            observation that lies within the trim range is kept. When ``True``
-            such observations are discarded and not included in the trimmed
-            annotation.
-
-        Returns
-        -------
-        jam_trimmed : JAMS
-            The trimmed jam with trimmed annotations, returned as a new JAMS
-            object.
-
-        """
-        # Make sure duration is set in file metadata
-        if self.file_metadata.duration is None:
-            raise JamsError("Duration must be set (jam.file_metadata.duration) before " "trimming can be performed.")
-
-        # Make sure start and end times are within the file start/end times
-        if not (0 <= start_time <= end_time <= float(self.file_metadata.duration)):
-            raise ParameterError(
-                "start_time and end_time must be within the original file "
-                f"duration ({float(self.file_metadata.duration):f}) and end_time cannot be smaller than "
-                "start_time."
-            )
-
-        # Create a new jams
-        jam_trimmed = JAMS(annotations=None, file_metadata=self.file_metadata, sandbox=self.sandbox)
-
-        # trim annotations
-        jam_trimmed.annotations = self.annotations.trim(start_time, end_time, strict=strict)
-
-        # Document jam-level trim in top level sandbox
-        if "trim" not in jam_trimmed.sandbox.keys():
-            jam_trimmed.sandbox.update(trim=[{"start_time": start_time, "end_time": end_time}])
-        else:
-            jam_trimmed.sandbox.trim.append({"start_time": start_time, "end_time": end_time})
-
-        return jam_trimmed
-
-    def slice(self, start_time, end_time, strict=False):
-        """
-        Slice all the annotations inside the jam and return as a new `JAMS`
-        object.
-
-        See `Annotation.slice` for details about how the annotations
-        are sliced.
-
-        This operation is also documented in the jam-level sandbox
-        with a list keyed by ``JAMS.sandbox.slice`` containing a tuple for each
-        jam-level slice of the form ``(start_time, end_time)``.
-
-        Since slicing is implemented using trimming, the operation will also be
-        documented in ``JAMS.sandbox.trim`` as described in `JAMS.trim`.
-
-        This function also copies over all of the file metadata from the
-        original jam.
-
-        Note: slicing will affect the duration of the jam, i.e. the new value
-        of ``JAMS.file_metadata.duration`` will be ``end_time - start_time``.
-
-        Parameters
-        ----------
-        start_time : float
-            The desired start time for slicing in seconds.
-        end_time
-            The desired end time for slicing in seconds. Must be greater than
-            ``start_time``.
-        strict : bool
-            When ``False`` (default) observations that lie at the boundaries of
-            the slicing range (see `Annotation.slice` for details), will have
-            their time and/or duration adjusted such that only the part of the
-            observation that lies within the slice range is kept. When ``True``
-            such observations are discarded and not included in the sliced
-            annotation.
-
-        Returns
-        -------
-        jam_sliced: JAMS
-            The sliced jam with sliced annotations, returned as a new
-            JAMS object.
-
-        """
-        # Make sure duration is set in file metadata
-        if self.file_metadata.duration is None:
-            raise JamsError("Duration must be set (jam.file_metadata.duration) before " "slicing can be performed.")
-
-        # Make sure start and end times are within the file start/end times
-        if (
-            start_time < 0
-            or start_time > float(self.file_metadata.duration)
-            or end_time < start_time
-            or end_time > float(self.file_metadata.duration)
-        ):
-            raise ParameterError(
-                "start_time and end_time must be within the original file "
-                f"duration ({float(self.file_metadata.duration):f}) and end_time cannot be smaller than "
-                "start_time."
-            )
-
-        # Create a new jams
-        jam_sliced = JAMS(annotations=None, file_metadata=self.file_metadata, sandbox=self.sandbox)
-
-        # trim annotations
-        jam_sliced.annotations = self.annotations.slice(start_time, end_time, strict=strict)
-
-        # adjust dutation
-        jam_sliced.file_metadata.duration = end_time - start_time
-
-        # Document jam-level trim in top level sandbox
-        if "slice" not in jam_sliced.sandbox.keys():
-            jam_sliced.sandbox.update(slice=[{"start_time": start_time, "end_time": end_time}])
-        else:
-            jam_sliced.sandbox.slice.append({"start_time": start_time, "end_time": end_time})
-
-        return jam_sliced
-
-    @property
-    def __json_light__(self):
-        r"""Return the JObject as a set of native data types for serialization.
-
-        Note: attributes beginning with underscores are suppressed.
-
-        This also skips the `annotations` field, which will be validated separately.
-        """
-        filtered_dict = {}
-
+    def __json__(self):
+        result = {}
+        # Defensive: ensure self.annotations is an AnnotationArray
+        annotations = self.annotations
+        if not isinstance(annotations, AnnotationArray):
+            annotations = AnnotationArray(annotations)
         for k, item in iteritems(self.__dict__):
             if k.startswith("_"):
                 continue
             if k == "annotations":
-                # Serialize annotations as a list of dicts
-                filtered_dict[k] = [ann.__json_light__() for ann in self.annotations]
+                result[k] = annotations.__json__()
+            elif k == "file_metadata" and hasattr(item, "__json__"):
+                result[k] = item.__json__()
+            elif k == "sandbox" and hasattr(item, "__json__"):
+                result[k] = item.__json__()
             elif hasattr(item, "__json__"):
-                filtered_dict[k] = item.__json__()
+                result[k] = item.__json__()
             else:
-                filtered_dict[k] = serialize_obj(item)
+                result[k] = serialize_obj(item)
+        return result
 
-        return filtered_dict
+    def trim(self, start_time, end_time, strict=False):
+        """Trim all annotations in the JAMS object to a given time range.
+
+        Parameters
+        ----------
+        start_time : float
+            The start time for the trimmed annotations.
+        end_time : float
+            The end time for the trimmed annotations.
+        strict : bool
+            If `True`, annotations that lie completely outside the given
+            range will be removed.
+
+        Returns
+        -------
+        trimmed : JAMS
+            A new JAMS object with trimmed annotations.
+        """
+        if not hasattr(self.file_metadata, "duration") or self.file_metadata.duration is None:
+            raise JamsError("Cannot trim: file_metadata.duration is not set")
+        if end_time <= start_time or start_time < 0 or end_time > self.file_metadata.duration:
+            raise ParameterError("Invalid trim range")
+
+        # Create new sandbox data
+        new_sandbox = Sandbox(**self.sandbox._data)
+
+        trimmed = JAMS(
+            annotations=self.annotations.trim(start_time, end_time, strict=strict),
+            file_metadata=FileMetadata(
+                title=self.file_metadata.title,
+                artist=self.file_metadata.artist,
+                release=self.file_metadata.release,
+                duration=end_time - start_time,  # Updated duration
+                identifiers=self.file_metadata.identifiers,
+                jams_version=self.file_metadata.jams_version,
+            ),
+            sandbox=new_sandbox,
+        )
+
+        # Set up or update the trim history in the sandbox
+        if "trim" in self.sandbox._data and isinstance(self.sandbox._data["trim"], list):
+            trimmed.sandbox._data["trim"] = self.sandbox._data["trim"].copy()
+        else:
+            trimmed.sandbox._data["trim"] = []
+
+        # Add the trim entry
+        entry = {"start_time": start_time, "end_time": end_time}
+        if entry not in trimmed.sandbox._data["trim"]:
+            trimmed.sandbox._data["trim"].append(entry)
+
+        return trimmed
+
+    def slice(self, start_time, end_time, strict=False):
+        """Slice all annotations in the JAMS object to a given time range.
+
+        Parameters
+        ----------
+        start_time : float
+            The start time for the sliced annotations.
+        end_time : float
+            The end time for the sliced annotations.
+        strict : bool
+            If `True`, annotations that lie completely outside the given
+            range will be removed.
+
+        Returns
+        -------
+        sliced : JAMS
+            A new JAMS object with sliced annotations.
+        """
+        if not hasattr(self.file_metadata, "duration") or self.file_metadata.duration is None:
+            raise JamsError("Cannot slice: file_metadata.duration is not set")
+        if end_time <= start_time or start_time < 0 or end_time > self.file_metadata.duration:
+            raise ParameterError("Invalid slice range")
+
+        # Create new sandbox with the same data
+        new_sandbox = Sandbox(**self.sandbox._data)
+
+        sliced = JAMS(
+            annotations=self.annotations.slice(start_time, end_time, strict=strict),
+            file_metadata=FileMetadata(
+                title=self.file_metadata.title,
+                artist=self.file_metadata.artist,
+                release=self.file_metadata.release,
+                duration=end_time - start_time,  # Update duration based on slice
+                identifiers=self.file_metadata.identifiers,
+                jams_version=self.file_metadata.jams_version,
+            ),
+            sandbox=new_sandbox,
+        )
+
+        # Set up or update the slice history in the sandbox
+        if "slice" in self.sandbox._data and isinstance(self.sandbox._data["slice"], list):
+            sliced.sandbox._data["slice"] = self.sandbox._data["slice"].copy()
+        else:
+            sliced.sandbox._data["slice"] = []
+
+        # Add the slice entry
+        entry = {"start_time": start_time, "end_time": end_time}
+        if entry not in sliced.sandbox._data["slice"]:
+            sliced.sandbox._data["slice"].append(entry)
+
+        return sliced
+
+    def add(self, jam, on_conflict="fail"):
+        """Add the contents of another jam to this object.
+
+        Parameters
+        ----------
+        jam: JAMS object
+            Object to add to this jam
+        on_conflict: str, default='fail'
+            Strategy for resolving metadata conflicts; one of
+                ['fail', 'overwrite', or 'ignore'].
+        Raises
+        ------
+        ParameterError
+            if `on_conflict` is an unknown value
+        JamsError
+            if file_metadata conflicts and on_conflict is 'fail'
+        """
+        # Check file_metadata conflict
+        if self.file_metadata != jam.file_metadata:
+            if on_conflict == "fail":
+                raise JamsError("file_metadata conflict")
+            elif on_conflict == "overwrite":
+                self.file_metadata = jam.file_metadata
+            elif on_conflict == "ignore":
+                pass
+            else:
+                raise ParameterError(f"Unknown on_conflict value: {on_conflict}")
+        # Add annotations
+        self.annotations.extend(jam.annotations)
+
+    def save(self, path_or_file, strict=True, fmt="auto"):
+        """Save the JAMS object to a file.
+
+        Parameters
+        ----------
+        path_or_file : str or file-like
+            Path to the JAMS file to save
+            OR
+            An open file handle to save to.
+        strict : bool
+            if `True`, enforce strict schema validation
+        fmt : str ['auto', 'jams', 'jamz']
+            The encoding format of the output
+        """
+        self.validate(strict=strict)
+        with _open(path_or_file, mode="w", fmt=fmt) as fdesc:
+            json.dump(self.__json__(), fdesc, indent=2)
+
+    def __setattr__(self, key, value):
+        if key not in self.VALID_ATTRIBUTES:
+            raise SchemaError(f"Invalid field '{key}' for JAMS object")
+        super().__setattr__(key, value)
+
+    def validate(self, strict=True):
+        """Validate the JAMS object and all its contents against the schema.
+
+        Parameters
+        ----------
+        strict : bool
+            If True, raises SchemaErrors for validation issues.
+            If False, issues warnings for validation issues.
+
+        Returns
+        -------
+        valid : bool
+            True if the JAMS object is valid.
+
+        Raises
+        ------
+        SchemaError
+            If strict=True and validation fails.
+        """
+        # First validate the JAMS object itself
+        valid = super().validate(strict=strict)
+
+        # Then validate all annotations
+        for ann in self.annotations:
+            try:
+                ann_valid = ann.validate(strict=strict)
+                valid = valid and ann_valid
+            except SchemaError as e:
+                if strict:
+                    raise SchemaError(f"Annotation validation failed: {str(e)}") from None
+                else:
+                    warnings.warn(f"Annotation validation warning: {str(e)}", UserWarning)
+                    valid = False
+
+        # Also validate file_metadata
+        try:
+            fm_valid = self.file_metadata.validate(strict=strict)
+            valid = valid and fm_valid
+        except SchemaError as e:
+            if strict:
+                raise SchemaError(f"FileMetadata validation failed: {str(e)}") from None
+            else:
+                warnings.warn(f"FileMetadata validation warning: {str(e)}", UserWarning)
+                valid = False
+
+        return valid

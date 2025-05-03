@@ -5,6 +5,8 @@ import os
 import sys
 from importlib import resources
 from itertools import chain
+import glob
+import warnings
 
 # Import the necessary modules
 from . import eval, schema, sonify, util, display
@@ -46,7 +48,7 @@ from .models import (
 )
 from .nsconvert import convert
 from .schema import list_namespaces
-from .version import version as __version__
+from .version import __version__, JAMS_VERSION
 
 # Populate the namespace mapping
 try:
@@ -64,6 +66,10 @@ except (ModuleNotFoundError, TypeError):
 if "JAMS_SCHEMA_DIR" in os.environ:
     for ns in util.find_with_extension(os.environ["JAMS_SCHEMA_DIR"], "json"):
         schema.add_namespace(ns)
+
+# Add all namespace files to the schema
+for file_path in glob.glob(os.path.join(os.path.dirname(__file__), "schemata", "namespaces", "*.json")):
+    schema.add_namespace(file_path)
 
 __all__ = [
     "JAMS",
@@ -83,6 +89,7 @@ __all__ = [
     "convert",
     "list_namespaces",
     "__version__",
+    "JAMS_VERSION",
     "display",
     # Pydantic models
     "JAMSModel",

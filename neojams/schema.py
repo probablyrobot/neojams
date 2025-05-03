@@ -47,7 +47,17 @@ NS_SCHEMA_DIR = "namespaces"
 # Local schema names can include these prefixes and still be valid
 NS_REGEX = r"^(namespace|.*jams)\-[a-z]+.json$"
 
-__all__ = ["is_valid", "validate", "schema_path", "JAMS_SCHEMA", "values", "add_namespace", "list_namespaces"]
+__all__ = [
+    "is_valid",
+    "validate",
+    "schema_path",
+    "JAMS_SCHEMA",
+    "values",
+    "add_namespace",
+    "list_namespaces",
+    "namespace",
+    "namespace_array",
+]
 
 
 # Define namespace validation functions and store them
@@ -119,8 +129,6 @@ def namespace_array(namespace: str) -> dict:
 def is_dense(namespace: str) -> bool:
     """Test if a namespace is dense.
 
-    This is stub for backward compatibility.
-
     Parameters
     ----------
     namespace : str
@@ -129,16 +137,25 @@ def is_dense(namespace: str) -> bool:
     Returns
     -------
     dense : bool
-        True if the namespace is time-dense
+        True if the namespace is time-dense, False if sparse
 
     Raises
     ------
     NamespaceError
         If the namespace is not found
     """
-    if namespace in __NAMESPACE__:
-        return True
-    raise NamespaceError(f"Unknown namespace: {namespace}")
+    if namespace not in __NAMESPACE__:
+        raise NamespaceError(f"Unknown namespace: {namespace}")
+
+    # Get the schema for this namespace
+    schema_def = schema(namespace)
+
+    # Check if the schema has a 'dense' property
+    if "dense" in schema_def:
+        return schema_def["dense"]
+
+    # Default to sparse if not specified
+    return False
 
 
 def is_valid(obj, schema=None):
@@ -236,7 +253,7 @@ def schema_path(namespace):
     values = __NAMESPACE__.get(namespace, [])
 
     if not values:
-        raise SchemaError(f"Unknown namespace: {namespace:s}")
+        raise NamespaceError(f"Unknown namespace: {namespace:s}")
 
     return values[0]
 
@@ -260,7 +277,7 @@ def schema(namespace):
 
     Examples
     --------
-    >>> tag_schema = jams.schema.schema('tag_open')
+    >>> tag_schema = jams.schema('tag_open')
     >>> tag_schema['properties'].keys()    # doctest: +SKIP
     [u'confidence', u'tag', u'id', u'value']
     >>> tag_schema['properties']['tag']['description']    # doctest: +SKIP
@@ -289,6 +306,11 @@ def values(namespace):
         allowed values is returned.
         Otherwise, `None` is returned.
 
+    Raises
+    ------
+    NamespaceError
+        If the namespace is not found or does not have an enum constraint
+
     Examples
     --------
     >>> jams.schema.values('tag_gtzan')    # doctest: +SKIP
@@ -298,10 +320,10 @@ def values(namespace):
 
     schema_def = schema(namespace)
 
-    if "enum" in schema_def["properties"]["value"]:
-        return schema_def["properties"]["value"]["enum"]
+    if "enum" in schema_def.get("value", {}):
+        return schema_def["value"]["enum"]
 
-    return None
+    raise NamespaceError(f"Namespace {namespace} does not have an enum constraint")
 
 
 def add_namespace(filename):
@@ -393,9 +415,18 @@ def get_dtypes(namespace):
 
     dtypes = {}
 
-    for field, spec in schema_def["properties"].items():
-        if "type" in spec:
-            dtypes[field] = spec["type"]
+    # Handle the value field
+    if "value" in schema_def:
+        value_schema = schema_def["value"]
+        if "oneOf" in value_schema:
+            dtypes["value"] = [t["type"] for t in value_schema["oneOf"]]
+        elif "type" in value_schema:
+            dtypes["value"] = value_schema["type"]
+
+    # Add standard fields
+    dtypes["time"] = "number"
+    dtypes["duration"] = "number"
+    dtypes["confidence"] = ["number", "null"]
 
     return dtypes
 
@@ -475,3 +506,8 @@ def __load_jams_schema():
 _load_all_namespaces()
 JAMS_SCHEMA = __load_jams_schema()
 VALIDATOR = jsonschema.validators.Draft4Validator(JAMS_SCHEMA)
+
+
+def namespace(namespace: str) -> dict:
+    """Alias for namespace_array for backward compatibility."""
+    return namespace_array(namespace)
