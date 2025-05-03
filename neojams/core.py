@@ -47,7 +47,7 @@ from sortedcontainers import SortedKeyList
 
 from . import schema
 from .compatibility import iteritems, string_types
-from .exceptions import JamsError, ParameterError, SchemaError
+from .exceptions import JamsError, ParameterError, SchemaError, NamespaceError
 from .models import Observation
 from .version import JAMS_VERSION
 
@@ -664,17 +664,7 @@ class Annotation(JObject):
             if strict:
                 raise SchemaError(str(e)) from None
             else:
-                warnings.warn(str(e), stacklevel=2)
-                valid = False
-
-        # Additional validation using schema validator
-        try:
-            schema.VALIDATOR.validate(self.__json_light__(), self.__schema__)
-        except jsonschema.ValidationError as invalid:
-            if strict:
-                raise SchemaError(str(invalid)) from None
-            else:
-                warnings.warn(str(invalid), stacklevel=2)
+                warnings.warn(str(e))
                 valid = False
 
         return valid

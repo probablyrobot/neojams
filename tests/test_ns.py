@@ -165,6 +165,14 @@ def test_ns_tempo_valid():
 )
 def test_ns_tempo_invalid(value, confidence):
     ann = Annotation(namespace="tempo")
+    
+    # Handle string confidence separately as it will fail at creation time with a ValidationError
+    if isinstance(confidence, str):
+        import pydantic_core
+        with pytest.raises((neojams.exceptions.JamsError, pydantic_core._pydantic_core.ValidationError)):
+            ann.append(time=0, duration=0, value=value, confidence=confidence)
+        return
+    
     ann.append(time=0, duration=0, value=value, confidence=confidence)
 
     with pytest.raises(neojams.SchemaError):

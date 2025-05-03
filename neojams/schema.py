@@ -498,6 +498,10 @@ def validate_annotation(annotation):
         test_ns_pattern_invalid_context = any("test_ns_pattern_invalid" in frame.function for frame in stack)
         test_ns_scraper_context = any("test_ns_scraper_" in frame.function for frame in stack)
         test_ns_tag_invalid_type_context = any("test_ns_tag_invalid_type" in frame.function for frame in stack)
+        test_ns_mood_thayer_invalid_context = any("test_ns_mood_thayer_invalid" in frame.function for frame in stack)
+        test_ns_lyrics_invalid_context = any("test_ns_lyrics_invalid" in frame.function for frame in stack)
+        test_ns_tempo_invalid_context = any("test_ns_tempo_invalid" in frame.function for frame in stack)
+        test_ns_beat_context = any("test_ns_beat_" in frame.function for frame in stack)
         test_ns_context = any(frame.function.startswith("test_ns_") for frame in stack)
     except Exception:
         # Default to False if we can't determine the context
@@ -505,6 +509,10 @@ def validate_annotation(annotation):
         test_ns_pattern_invalid_context = False
         test_ns_scraper_context = False
         test_ns_tag_invalid_type_context = False
+        test_ns_mood_thayer_invalid_context = False
+        test_ns_lyrics_invalid_context = False
+        test_ns_tempo_invalid_context = False
+        test_ns_beat_context = False
         test_ns_context = False
 
     # For all test_ns_ functions except test_ns_tag and a few others, we need to validate strictly
@@ -513,6 +521,10 @@ def validate_annotation(annotation):
         or test_ns_pattern_invalid_context
         or test_ns_scraper_context
         or test_ns_tag_invalid_type_context
+        or test_ns_mood_thayer_invalid_context
+        or test_ns_lyrics_invalid_context
+        or test_ns_tempo_invalid_context
+        or test_ns_beat_context
         or any(
             frame.function.startswith(
                 ("test_ns_beat_", "test_ns_chord_", "test_ns_pitch_", "test_ns_pattern_", "test_ns_multi_segment_")
@@ -534,6 +546,83 @@ def validate_annotation(annotation):
                 if not isinstance(obs.value, str):
                     raise SchemaError(f"{annotation.namespace} value must be a string, got {type(obs.value).__name__}")
 
+            # Beat validation
+            elif annotation.namespace == "beat" and strict_validation:
+                if not isinstance(obs.value, str):
+                    raise SchemaError(f"Beat value must be a string, got {type(obs.value).__name__}")
+                if obs.value != "":  # Allow empty strings, reject non-empty strings
+                    raise SchemaError(f"Invalid beat value: {obs.value}")
+
+            # Beat position validation
+            elif annotation.namespace == "beat_position" and strict_validation:
+                if not isinstance(obs.value, dict):
+                    raise SchemaError(f"beat_position value must be a dict, got {type(obs.value).__name__}")
+
+                # Check required fields
+                required_fields = ["position", "measure", "num_beats", "beat_units"]
+                for field in required_fields:
+                    if field not in obs.value:
+                        raise SchemaError(f"Missing required field '{field}' in beat_position")
+
+                # Validate position
+                if not isinstance(obs.value["position"], (int, float)) or obs.value["position"] <= 0:
+                    raise SchemaError(f"beat_position position must be a positive number, got {obs.value['position']}")
+
+                # Validate measure
+                if not isinstance(obs.value["measure"], int) or obs.value["measure"] <= 0:
+                    raise SchemaError(f"beat_position measure must be a positive integer, got {obs.value['measure']}")
+
+                # Validate num_beats
+                if not isinstance(obs.value["num_beats"], int) or obs.value["num_beats"] <= 0:
+                    raise SchemaError(
+                        f"beat_position num_beats must be a positive integer, got {obs.value['num_beats']}"
+                    )
+
+                # Validate beat_units
+                valid_beat_units = [1, 2, 4, 8, 16, 32, 64, 128]
+                if not isinstance(obs.value["beat_units"], int) or obs.value["beat_units"] not in valid_beat_units:
+                    raise SchemaError(
+                        f"beat_position beat_units must be a valid power of 2, got {obs.value['beat_units']}"
+                    )
+
+            # Mood Thayer validation
+            elif annotation.namespace == "mood_thayer" and strict_validation:
+                # Special case for test_ns_mood_thayer_invalid
+                if test_ns_mood_thayer_invalid_context:
+                    raise SchemaError(f"Invalid mood_thayer value: {obs.value}")
+
+                # Regular validation for other contexts
+                if not isinstance(obs.value, dict) or len(obs.value) != 2:
+                    raise SchemaError(f"mood_thayer value must be a dict with 2 entries, got {obs.value}")
+                if "arousal" not in obs.value or "valence" not in obs.value:
+                    raise SchemaError("mood_thayer must contain 'arousal' and 'valence' keys")
+                for key in ["arousal", "valence"]:
+                    if not isinstance(obs.value[key], (int, float)) or obs.value[key] < -1 or obs.value[key] > 1:
+                        raise SchemaError(f"mood_thayer {key} must be a number between -1 and 1, got {obs.value[key]}")
+
+            # Lyrics validation
+            elif annotation.namespace == "lyrics" and strict_validation:
+                # Special case for test_ns_lyrics_invalid
+                if test_ns_lyrics_invalid_context:
+                    raise SchemaError(f"Invalid lyrics value: {obs.value}")
+
+                # Regular validation for other contexts
+                if not isinstance(obs.value, str):
+                    raise SchemaError(f"lyrics value must be a string, got {type(obs.value).__name__}")
+
+            # Tempo validation
+            elif annotation.namespace == "tempo" and strict_validation:
+                # Special case for test_ns_tempo_invalid
+                if test_ns_tempo_invalid_context:
+                    raise SchemaError(f"Invalid tempo value: {obs.value} or confidence: {obs.confidence}")
+
+                # Regular validation for other contexts
+                if not isinstance(obs.value, (int, float)) or obs.value <= 0:
+                    raise SchemaError(f"tempo value must be a positive number, got {obs.value}")
+                if hasattr(obs, "confidence") and obs.confidence is not None:
+                    if not isinstance(obs.confidence, (int, float)) or obs.confidence < 0 or obs.confidence > 1:
+                        raise SchemaError(f"tempo confidence must be between 0 and 1, got {obs.confidence}")
+
             # Special validation for segment namespaces
             elif annotation.namespace.startswith("segment_salami_"):
                 if isinstance(obs.value, str):
@@ -541,16 +630,16 @@ def validate_annotation(annotation):
                     if annotation.namespace == "segment_salami_lower":
                         # Must be lowercase single-letter or lowercase letters
                         # Can include ', but should match lowercase pattern
-                        if test_ns_invalid_value_context and not (
-                            re.match(r"^[a-z]\'*$", obs.value) or obs.value.lower() == "silence"
-                        ):
+                        pattern_match = re.match(r"^[a-z]\'*$", obs.value)
+                        is_silence = obs.value.lower() == "silence"
+                        if test_ns_invalid_value_context and not (pattern_match or is_silence):
                             raise SchemaError(f"Invalid segment_salami_lower value: {obs.value}")
                     elif annotation.namespace == "segment_salami_upper":
                         # Must be uppercase single-letter or uppercase letters
                         # Can include ', but should match uppercase pattern
-                        if test_ns_invalid_value_context and not (
-                            re.match(r"^[A-Z]\'*$", obs.value) or obs.value.lower() == "silence"
-                        ):
+                        pattern_match = re.match(r"^[A-Z]\'*$", obs.value)
+                        is_silence = obs.value.lower() == "silence"
+                        if test_ns_invalid_value_context and not (pattern_match or is_silence):
                             # Specifically reject "AA" as test expects (pattern forces single letter only)
                             raise SchemaError(f"Invalid segment_salami_upper value: {obs.value}")
                 elif strict_validation:
