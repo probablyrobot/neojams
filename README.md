@@ -2,12 +2,12 @@ NeoJAMS: A JSON Annotated Music Specification
 ==================================
 
 [![PyPI](https://img.shields.io/pypi/v/neojams.svg)](https://pypi.python.org/pypi/neojams)
-[![License](https://img.shields.io/github/license/marl/jams.svg)](https://github.com/marl/jams/blob/main/LICENSE.md)
+[![License](https://img.shields.io/github/license/probablyrobot/neojams.svg)](https://github.com/probablyrobot/neojams/blob/main/LICENSE)
 [![Tests](https://github.com/probablyrobot/neojams/actions/workflows/test.yml/badge.svg)](https://github.com/probablyrobot/neojams/actions/workflows/test.yml)
 [![PyPI Deployment](https://github.com/probablyrobot/neojams/actions/workflows/publish.yml/badge.svg)](https://github.com/probablyrobot/neojams/actions/workflows/publish.yml)
 [![Python Versions](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](https://www.python.org/)
 
-A Python package for working with the JAMS format, with added support for Python 3.12 and 3.13.
+A modernized Python package for working with the JAMS format, built on top of the original JAMS project. This version adds support for Python 3.12 and 3.13, improved type safety, and enhanced robustness.
 
 JAMS are structured JSON annotations for music tracks that fully contain both the information and metadata for various types of annotations.
 
@@ -29,8 +29,8 @@ For development installation:
 
 ```bash
 # Clone the repository
-git clone https://github.com/marl/jams.git
-cd jams
+git clone https://github.com/probablyrobot/neojams.git
+cd neojams
 
 # Install with Poetry
 poetry install --with dev
@@ -79,7 +79,7 @@ The full documentation can be found [here](http://jams.readthedocs.io/en/stable/
 
 Development
 -----------
-NeoJAMS is compatible with Python 3.9-3.13, with special attention to compatibility with Python 3.12 and 3.13.
+NeoJAMS is specifically designed for Python 3.12 and 3.13, with modern type hints and improved error handling.
 
 For development setup and guidelines, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
@@ -110,8 +110,9 @@ Note: The version in the PyPI package will be taken from the `version` field in 
 
 Who
 ----
-To date, the initial JAMS effort has evolved out of internal needs at MARL@NYU,
-with some great feedback from our friends at LabROSA.
+NeoJAMS is a modernization of the original JAMS project, which was developed by the MARL@NYU team and contributors. This version is maintained by Igor Bogicevic (igor.bogicevic@gmail.com, GitHub: probablyrobot).
+
+The original JAMS effort evolved out of internal needs at MARL@NYU, with feedback from LabROSA. This modernization builds upon their work while adding support for modern Python features and improved type safety.
 
 If you want to get involved, do let us know!
 
