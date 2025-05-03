@@ -2,9 +2,9 @@ NeoJAMS: A JSON Annotated Music Specification
 ==================================
 
 [![PyPI](https://img.shields.io/pypi/v/neojams.svg)](https://pypi.python.org/pypi/neojams)
-[![License](https://img.shields.io/github/license/marl/jams.svg)](https://github.com/marl/jams/blob/master/LICENSE.md)
-[![Build Status](https://travis-ci.org/marl/jams.svg?branch=master)](https://travis-ci.org/marl/jams)
-[![Coverage Status](https://coveralls.io/repos/marl/jams/badge.svg?branch=master)](https://coveralls.io/r/marl/jams?branch=master)
+[![License](https://img.shields.io/github/license/marl/jams.svg)](https://github.com/marl/jams/blob/main/LICENSE.md)
+[![Build Status](https://travis-ci.org/marl/jams.svg?branch=main)](https://travis-ci.org/marl/jams)
+[![Coverage Status](https://coveralls.io/repos/marl/jams/badge.svg?branch=main)](https://coveralls.io/r/marl/jams?branch=main)
 [![Dependency Status](https://dependencyci.com/github/marl/jams/badge)](https://dependencyci.com/github/marl/jams)
 [![Python Versions](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](https://www.python.org/)
 [![Tests](https://github.com/probablyrobot/neojams/actions/workflows/test.yml/badge.svg)](https://github.com/probablyrobot/neojams/actions/workflows/test.yml)
