@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 """Top-level module for NeoJAMS"""
 
+import glob
 import os
 import sys
+import warnings
 from importlib import resources
 from itertools import chain
-import glob
-import warnings
 
 # Import the necessary modules
-from . import eval, schema, sonify, util, display
+from . import display, eval, schema, sonify, util
 from .core import (
     JAMS,
     Annotation,
@@ -48,7 +48,7 @@ from .models import (
 )
 from .nsconvert import convert
 from .schema import list_namespaces
-from .version import __version__, JAMS_VERSION
+from .version import JAMS_VERSION, __version__
 
 # Populate the namespace mapping
 try:
