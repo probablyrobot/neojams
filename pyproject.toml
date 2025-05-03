@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "neojams"
-version = "0.1.1"
+version = "0.1.2"
 description = "A modernized Python package for working with the JAMS format, built on top of the original JAMS project"
 authors = ["Igor Bogicevic <igor.bogicevic@gmail.com>", "MARL development team"]
 maintainers = ["Igor Bogicevic <igor.bogicevic@gmail.com>"]
