@@ -11,7 +11,7 @@ license = "ISC"
 readme = "README.md"
 repository = "https://github.com/marl/jams"
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: ISC License (ISCL)",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.12",
