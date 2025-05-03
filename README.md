@@ -83,31 +83,6 @@ NeoJAMS is specifically designed for Python 3.12 and 3.13, with modern type hint
 
 For development setup and guidelines, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
-PyPI Deployment
---------------
-This package is automatically published to PyPI when a new GitHub release is created. The deployment is handled by GitHub Actions using the workflow defined in `.github/workflows/publish.yml`.
-
-For maintainers who need to set up PyPI deployment:
-
-1. Create a PyPI API token:
-   - Go to https://pypi.org/manage/account/token/
-   - Create a new token with scope "Entire account" or specific to this project
-   - Copy the token value (it will only be shown once)
-
-2. Add the token to GitHub repository secrets:
-   - Go to your GitHub repository settings
-   - Navigate to "Secrets and variables" > "Actions"
-   - Create a new repository secret named `PYPI_TOKEN` with the value of your PyPI token
-
-3. To trigger a new release:
-   - Go to the "Releases" section of your GitHub repository
-   - Click "Draft a new release"
-   - Create a new tag following semantic versioning (e.g., v0.2.1)
-   - Add release notes
-   - Publish the release - this will automatically trigger the GitHub Actions workflow
-
-Note: The version in the PyPI package will be taken from the `version` field in `pyproject.toml`. Make sure to update this version before creating a new release.
-
 Who
 ----
 NeoJAMS is a modernization of the original JAMS project, which was developed by the MARL@NYU team and contributors. This version is maintained by Igor Bogicevic (igor.bogicevic@gmail.com, GitHub: probablyrobot).
