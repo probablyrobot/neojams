@@ -5,19 +5,20 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "neojams"
 version = "0.1.0"
-description = "JAMS: A JSON Annotated Music Specification"
-authors = ["NeoJAMS development team"]
+description = "A modernized Python package for working with the JAMS format, built on top of the original JAMS project"
+authors = ["Igor Bogicevic <igor.bogicevic@gmail.com>", "MARL development team"]
+maintainers = ["Igor Bogicevic <igor.bogicevic@gmail.com>"]
 license = "ISC"
 readme = "README.md"
-repository = "https://github.com/marl/jams"
+repository = "https://github.com/probablyrobot/neojams"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: ISC License (ISCL)",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-keywords = ["audio", "music", "json"]
+keywords = ["audio", "music", "json", "jams", "mir"]
 packages = [{include = "neojams"}]
 
 [tool.poetry.dependencies]
