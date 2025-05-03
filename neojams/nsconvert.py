@@ -15,7 +15,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from .exceptions import NamespaceError
+from .exceptions import NamespaceError, SchemaError
 
 # The structure that handles all conversion mappings
 __CONVERSION__ = defaultdict(lambda: defaultdict(dict))
@@ -106,9 +106,9 @@ def convert(annotation, target_namespace):
         for source in __CONVERSION__[target_namespace]:
             if annotation.search(namespace=source):
                 return __CONVERSION__[target_namespace][source](annotation)
-            
+
             # Special handling for segment and tag patterns that use wildcards
-            if source.endswith('.*'):
+            if source.endswith(".*"):
                 prefix = source[:-2]  # Remove .* from end
                 if annotation.namespace.startswith(prefix):
                     return __CONVERSION__[target_namespace][source](annotation)
@@ -149,13 +149,13 @@ def can_convert(annotation, target_namespace):
         for source in __CONVERSION__[target_namespace]:
             if annotation.search(namespace=source):
                 return True
-            
+
             # Special handling for segment and tag patterns that use wildcards
-            if source.endswith('.*'):
+            if source.endswith(".*"):
                 prefix = source[:-2]  # Remove .* from end
                 if annotation.namespace.startswith(prefix):
                     return True
-                    
+
     return False
 
 
@@ -166,6 +166,13 @@ def pitch_hz_to_contour(annotation):
     data = extract_data(annotation)
 
     for obs in data:
+        # Check if the value is a valid number for conversion
+        if obs.value is None:
+            raise SchemaError("Cannot convert None value in pitch_hz to pitch_contour")
+
+        if not isinstance(obs.value, (int, float)):
+            raise SchemaError(f"Cannot convert non-numeric value '{obs.value}' in pitch_hz to pitch_contour")
+
         annotation.append(
             time=obs.time,
             duration=obs.duration,

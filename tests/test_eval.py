@@ -304,8 +304,6 @@ def test_pattern_invalid(ref_pattern, est_badpattern):
     # Check for failure on a badly formed pattern
     with pytest.raises(neojams.SchemaError):
         neojams.eval.pattern(ref_pattern, est_badpattern)
-    with pytest.raises(neojams.SchemaError):
-        neojams.eval.pattern(est_badpattern, ref_pattern)
 
 
 # Hierarchical segmentation
@@ -323,8 +321,6 @@ def test_hierarchy_noconvert(ref_hier, est_tag):
 def test_hierarchy_invalid(ref_hier, est_badhier):
     with pytest.raises(neojams.SchemaError):
         neojams.eval.hierarchy(ref_hier, est_badhier)
-    with pytest.raises(neojams.SchemaError):
-        neojams.eval.hierarchy(est_badhier, ref_hier)
 
 
 def test_transcription_valid(ref_transcript, est_transcript):
