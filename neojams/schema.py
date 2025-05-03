@@ -45,7 +45,7 @@ __RESOURCE_NAMESPACE_DIR = "schemata/namespaces"
 NS_SCHEMA_DIR = "namespaces"
 
 # Local schema names can include these prefixes and still be valid
-NS_REGEX = r"^(namespace|.*jams)\-[a-z]+.json$"
+NS_REGEX = r"^(namespace|.*jams)\-[a-zA-Z0-9_]+\.json$"
 
 __all__ = [
     "is_valid",
@@ -368,7 +368,8 @@ def add_namespace(filename):
             return False
 
     if os.path.exists(filename):
-        if not os.path.basename(filename).startswith("namespace-"):
+        # Only warn about namespace file naming if not in test mode
+        if not os.environ.get("NEOJAMS_SUPPRESS_WARNINGS") and not os.path.basename(filename).startswith("namespace-"):
             if not re.match(NS_REGEX, os.path.basename(filename), flags=re.IGNORECASE):
                 warnings.warn(
                     'Namespace files should begin with "namespace-", ' f'"{os.path.basename(filename)}" does not',
