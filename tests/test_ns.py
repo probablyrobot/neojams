@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import six
 from neojams import Annotation, Observation, SchemaError
-from test_util import srand
+from tests.test_util import srand
 
 parametrize = pytest.mark.parametrize
 
