@@ -8,7 +8,7 @@ import matplotlib
 import neojams
 from neojams import NamespaceError
 
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pytest
 
@@ -18,7 +18,7 @@ def test_display_jam():
     jam = neojams.JAMS()
 
     # Add a beat annotation
-    beat = neojams.Annotation(namespace='beat')
+    beat = neojams.Annotation(namespace="beat")
     beat.append(time=0, duration=0.0, value=1)
     beat.append(time=1, duration=0.0, value=2)
     beat.append(time=2, duration=0.0, value=3)
@@ -27,16 +27,17 @@ def test_display_jam():
     jam.annotations.append(beat)
 
     # Add a segment annotation
-    segment = neojams.Annotation(namespace='segment_open')
-    segment.append(time=0, duration=2, value='A')
-    segment.append(time=2, duration=2, value='B')
+    segment = neojams.Annotation(namespace="segment_open")
+    segment.append(time=0, duration=2, value="A")
+    segment.append(time=2, duration=2, value="B")
 
     jam.annotations.append(segment)
 
     # Set the file metadata
     jam.file_metadata.duration = (
-        max(jam.annotations[1].data[-1].time + jam.annotations[1].data[-1].duration,
-            jam.annotations[0].data[-1].time) + 1)
+        max(jam.annotations[1].data[-1].time + jam.annotations[1].data[-1].duration, jam.annotations[0].data[-1].time)
+        + 1
+    )
 
     plt.figure()
     neojams.display.display_jam(jam)
@@ -48,20 +49,16 @@ def test_display_jam():
     neojams.display.display_jam(jam, annotation_ids={0, -1})
 
     plt.figure()
-    neojams.display.display_jam(jam, annotation_ids={0, 2},
-                             label='Testing display_jam')
+    neojams.display.display_jam(jam, annotation_ids={0, 2}, label="Testing display_jam")
 
     plt.figure()
-    neojams.display.display_jam(jam, annotation_ids={0, 2}, time_range=[1, 3],
-                             label='Testing display_jam')
+    neojams.display.display_jam(jam, annotation_ids={0, 2}, time_range=[1, 3], label="Testing display_jam")
 
     plt.figure()
-    neojams.display.display_jam(jam, time_range=[1, 3],
-                             label='Testing display_jam')
+    neojams.display.display_jam(jam, time_range=[1, 3], label="Testing display_jam")
 
     plt.figure()
-    neojams.display.display_jam(jam, annotation_ids=[0, 1], time_range=[0, 4],
-                             label='Testing display_jam')
+    neojams.display.display_jam(jam, annotation_ids=[0, 1], time_range=[0, 4], label="Testing display_jam")
 
 
 @pytest.mark.parametrize(
@@ -149,19 +146,19 @@ def test_display_hierarchy():
     jam = neojams.JAMS()
 
     # Add a segment annotation
-    segment = neojams.Annotation(namespace='segment_tut')
-    segment.append(time=0, duration=2.0, value='A', confidence=1.0)
-    segment.append(time=2, duration=2.0, value='B', confidence=1.0)
-    segment.append(time=4, duration=4.0, value='A', confidence=1.0)
+    segment = neojams.Annotation(namespace="segment_tut")
+    segment.append(time=0, duration=2.0, value="A", confidence=1.0)
+    segment.append(time=2, duration=2.0, value="B", confidence=1.0)
+    segment.append(time=4, duration=4.0, value="A", confidence=1.0)
 
     jam.annotations.append(segment)
 
-    segment = neojams.Annotation(namespace='segment_tut')
-    segment.append(time=0, duration=2.0, value='a', confidence=1.0)
-    segment.append(time=2, duration=1.0, value='b', confidence=1.0)
-    segment.append(time=3, duration=1.0, value='c', confidence=1.0)
-    segment.append(time=4, duration=2.0, value='a', confidence=1.0)
-    segment.append(time=6, duration=2.0, value='d', confidence=1.0)
+    segment = neojams.Annotation(namespace="segment_tut")
+    segment.append(time=0, duration=2.0, value="a", confidence=1.0)
+    segment.append(time=2, duration=1.0, value="b", confidence=1.0)
+    segment.append(time=3, duration=1.0, value="c", confidence=1.0)
+    segment.append(time=4, duration=2.0, value="a", confidence=1.0)
+    segment.append(time=6, duration=2.0, value="d", confidence=1.0)
     segment.sandbox.poch = 1
 
     jam.annotations.append(segment)
@@ -173,13 +170,13 @@ def test_display_hierarchy():
     neojams.display.display_hierarchy(jam)
 
     plt.figure()
-    neojams.display.display_hierarchy(jam, label='hierarchy')
+    neojams.display.display_hierarchy(jam, label="hierarchy")
 
     plt.figure()
     neojams.display.display_hierarchy(jam, annotation_ids=[0], time_range=[0, 4])
 
     plt.figure()
-    neojams.display.display_hierarchy(jam, time_range=[0, 4], label='hier')
+    neojams.display.display_hierarchy(jam, time_range=[0, 4], label="hier")
 
     plt.figure()
     neojams.display.display_hierarchy(jam, time_range=[0, 4], label=None)
@@ -190,7 +187,7 @@ def test_display_beat():
     jam = neojams.JAMS()
 
     # Add a beat annotation
-    beat = neojams.Annotation(namespace='beat')
+    beat = neojams.Annotation(namespace="beat")
     beat.append(time=0, duration=0.0, value=1)
     beat.append(time=1, duration=0.0, value=2)
     beat.append(time=2, duration=0.0, value=3)
@@ -208,8 +205,7 @@ def test_display_beat():
     neojams.display.display_beat(jam, annotation_ids=[0])
 
     plt.figure()
-    neojams.display.display_beat(jam, label='Testing display_beat')
+    neojams.display.display_beat(jam, label="Testing display_beat")
 
     plt.figure()
-    neojams.display.display_beat(jam, annotation_ids=[0, 1], time_range=[1, 3],
-                              label='Testing display_beat')
+    neojams.display.display_beat(jam, annotation_ids=[0, 1], time_range=[1, 3], label="Testing display_beat")

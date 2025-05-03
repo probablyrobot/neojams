@@ -214,9 +214,13 @@ def test_chord():
 def test_beat_position():
     ann = neojams.Annotation(namespace="beat_position")
     ann.append(time=0, duration=0, confidence=0.5, value={"position": 1, "measure": 0, "num_beats": 4, "beat_units": 4})
-    ann.append(time=0.5, duration=0, confidence=0.5, value={"position": 2, "measure": 0, "num_beats": 4, "beat_units": 4})
+    ann.append(
+        time=0.5, duration=0, confidence=0.5, value={"position": 2, "measure": 0, "num_beats": 4, "beat_units": 4}
+    )
     ann.append(time=1, duration=0, confidence=0.5, value={"position": 3, "measure": 0, "num_beats": 4, "beat_units": 4})
-    ann.append(time=1.5, duration=0, confidence=0.5, value={"position": 4, "measure": 0, "num_beats": 4, "beat_units": 4})
+    ann.append(
+        time=1.5, duration=0, confidence=0.5, value={"position": 4, "measure": 0, "num_beats": 4, "beat_units": 4}
+    )
 
     ann2 = neojams.convert(ann, "beat")
 

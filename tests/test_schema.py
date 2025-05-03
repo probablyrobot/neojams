@@ -47,13 +47,13 @@ def test_schema_is_dense_exception(ns):
 def local_namespace():
     # Save the current value of NEOJAMS_SUPPRESS_WARNINGS
     suppress_warnings = os.environ.get("NEOJAMS_SUPPRESS_WARNINGS")
-    
+
     # Set environment variables for the test
     os.environ["JAMS_SCHEMA_DIR"] = os.path.join("tests", "fixtures", "schema")
     # Temporarily unset the suppress warnings flag to test the warning logic
     if "NEOJAMS_SUPPRESS_WARNINGS" in os.environ:
         del os.environ["NEOJAMS_SUPPRESS_WARNINGS"]
-    
+
     reload_module(neojams)
 
     # This one should pass
@@ -64,7 +64,7 @@ def local_namespace():
     # Restore the suppress warnings flag
     if suppress_warnings is not None:
         os.environ["NEOJAMS_SUPPRESS_WARNINGS"] = suppress_warnings
-    
+
     reload_module(neojams)
 
 
@@ -115,8 +115,8 @@ def test_schema_dtypes_badns():
 
 def test_list_namespaces():
     neojams.schema.list_namespaces()
-    
-    
+
+
 # Clean up environment variable after tests
 def test_cleanup():
     # This test runs last to clean up the environment

@@ -113,7 +113,9 @@ def beat_pos_ann():
     ann = neojams.Annotation(namespace="beat_position")
 
     for i, t in enumerate(np.arange(0, 10, 0.25)):
-        ann.append(time=t, duration=0, value={"position": 1 + i % 4, "measure": 1 + i // 4, "num_beats": 4, "beat_units": 4})
+        ann.append(
+            time=t, duration=0, value={"position": 1 + i % 4, "measure": 1 + i // 4, "num_beats": 4, "beat_units": 4}
+        )
     return ann
 
 

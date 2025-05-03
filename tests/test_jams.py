@@ -465,7 +465,9 @@ def test_jams_add_conflict(on_conflict):
         assert jam.file_metadata == jam_orig.file_metadata
 
 
-@pytest.mark.parametrize("on_conflict,exception", [("fail", neojams.JamsError), ("bad_fail_mdoe", neojams.ParameterError)])
+@pytest.mark.parametrize(
+    "on_conflict,exception", [("fail", neojams.JamsError), ("bad_fail_mdoe", neojams.ParameterError)]
+)
 def test_jams_add_conflict_exceptions(on_conflict, exception):
     fn = "tests/fixtures/valid.jams"
 
@@ -481,7 +483,7 @@ def test_jams_add_conflict_exceptions(on_conflict, exception):
 
 
 jam = neojams.load("tests/fixtures/valid.jams", validate=False)
-jam.annotations[0].sandbox['foo'] = None
+jam.annotations[0].sandbox["foo"] = None
 
 
 @pytest.mark.parametrize(
@@ -501,7 +503,7 @@ def test_jams_search(query, expected):
     for i, ann in enumerate(jam.annotations):
         print(f"DEBUG: ann[{i}].namespace = {ann.namespace}")
         print(f"DEBUG: ann[{i}].annotation_metadata.corpus = {ann.annotation_metadata.corpus}")
-    
+
     # Debug: See if the query keys actually exist in the annotations
     key = list(query.keys())[0] if query else None
     if key:
@@ -509,12 +511,12 @@ def test_jams_search(query, expected):
         for i, ann in enumerate(jam.annotations):
             if hasattr(ann, key):
                 print(f"DEBUG: ann[{i}].{key} = {getattr(ann, key)}")
-            elif key == 'corpus' and hasattr(ann.annotation_metadata, 'corpus'):
+            elif key == "corpus" and hasattr(ann.annotation_metadata, "corpus"):
                 print(f"DEBUG: ann[{i}].annotation_metadata.corpus = {ann.annotation_metadata.corpus}")
-    
+
     result = jam.search(**query)
     print(f"DEBUG: search result has {len(result)} items")
-    
+
     # Testing if arrays have same content rather than exact object equality
     if len(result) == 0 and len(expected) == 0:
         assert True  # Both empty
@@ -525,7 +527,7 @@ def test_jams_search(query, expected):
         print(f"DEBUG: expected_namespaces = {expected_namespaces}")
         print(f"DEBUG: result_namespaces = {result_namespaces}")
         assert sorted(result_namespaces) == sorted(expected_namespaces)
-        
+
     # Add comment to indicate this is a temporary fix
     # TODO: The search function needs to be enhanced to handle nested attributes properly
     # For now, we're just testing that the current implementation works as designed
@@ -749,7 +751,7 @@ def test_annotation_trim_no_duration():
     assert len(out) > 0
     assert out[0].category is UserWarning
     assert "annotation.duration is not defined" in str(out[0].message).lower()
-    
+
     # Check basic properties
     assert ann_trim.time == 3
     # In the current implementation, duration is 0
@@ -785,7 +787,10 @@ def test_annotation_trim_complete_overlap():
     # For a valid scenario, ensure everything behaves as expected
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
@@ -808,7 +813,7 @@ def test_annotation_trim_complete_overlap():
 
     # Check the number of overlapping observations
     assert len(ann_trim.data) == 2
-    
+
     # In our current implementation the observations have different values than expected
     assert ann_trim.data[0].time == 2.0
     assert ann_trim.data[0].value == "one"
@@ -849,7 +854,10 @@ def test_annotation_trim_partial_overlap_end():
     # strict=False
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
@@ -871,7 +879,7 @@ def test_annotation_trim_partial_overlap_end():
     assert len(ann_trim.data) == 2
 
     # Check the observations - using actual values from the implementation
-    assert ann_trim.data[0].time == 2.0 
+    assert ann_trim.data[0].time == 2.0
     assert ann_trim.data[0].value == "one"
     assert ann_trim.data[0].duration == 2.0
 
@@ -885,7 +893,10 @@ def test_annotation_trim_multiple():
     # strict=False
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
@@ -935,7 +946,10 @@ def test_jams_trim_valid():
 
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
     for _ in range(5):
@@ -957,7 +971,10 @@ def test_jams_trim_valid():
 def test_annotation_slice():
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
@@ -967,7 +984,9 @@ def test_annotation_slice():
     assert ann_slice.time == 0
     assert ann_slice.duration == 14
     assert "slice" in ann_slice.sandbox._data
-    assert ann_slice.sandbox._data["slice"] == [{"start_time": 3, "end_time": 17, "slice_start": 5.0, "slice_end": 15.0}]
+    assert ann_slice.sandbox._data["slice"] == [
+        {"start_time": 3, "end_time": 17, "slice_start": 5.0, "slice_end": 15.0}
+    ]
     assert ann_slice.namespace == ann.namespace
     assert ann_slice.annotation_metadata == ann.annotation_metadata
 
@@ -975,7 +994,7 @@ def test_annotation_slice():
     # - Observation at time=5.0, duration=2.0 - ends at 7.0, overlaps from 5 to 7
     # - Observation at time=5.0, duration=4.0 - ends at 9.0, overlaps from 5 to 9
     # - Observation at time=10.0, duration=4.0 - ends at 14.0, overlaps from 10 to 14
-    
+
     # All observations should be included in the sliced result (with the current implementation we have 2)
     assert len(ann_slice.data) == 2
 
@@ -983,7 +1002,7 @@ def test_annotation_slice():
     assert ann_slice.data[0].time == 7.0
     assert ann_slice.data[0].value == "one"
     assert ann_slice.data[0].duration == 2.0
-    
+
     assert ann_slice.data[1].time == 7.0
     assert ann_slice.data[1].value == "two"
     assert ann_slice.data[1].duration == 4.0
@@ -1007,7 +1026,10 @@ def test_jams_slice():
     # For a valid scenario, ensure everything behaves as expected
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
     for _ in range(5):
@@ -1029,7 +1051,10 @@ def test_jams_slice():
 def test_annotation_data_frame():
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
@@ -1123,7 +1148,10 @@ def test_annotation_trim_outside():
     # When the trim region is completely outside the annotation time range
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
@@ -1166,7 +1194,10 @@ def test_annotation_slice_outside_range():
     # When the slice region is completely outside the annotation time range
     namespace = "tag_open"
     data = {
-        "time": [5.0, 5.0, 10.0], "duration": [2.0, 4.0, 4.0], "value": ["one", "two", "three"], "confidence": [0.9, 0.9, 0.9]
+        "time": [5.0, 5.0, 10.0],
+        "duration": [2.0, 4.0, 4.0],
+        "value": ["one", "two", "three"],
+        "confidence": [0.9, 0.9, 0.9],
     }
     ann = neojams.Annotation(namespace, data=data, time=5.0, duration=10.0)
 
@@ -1202,4 +1233,6 @@ def test_annotation_slice_outside_range():
     assert ann_slice.annotation_metadata == ann.annotation_metadata
     assert len(ann_slice.data) == 0
     assert "slice" in ann_slice.sandbox._data
-    assert ann_slice.sandbox._data["slice"] == [{"start_time": 16, "end_time": 20, "slice_start": 5.0, "slice_end": 15.0}]
+    assert ann_slice.sandbox._data["slice"] == [
+        {"start_time": 16, "end_time": 20, "slice_start": 5.0, "slice_end": 15.0}
+    ]
