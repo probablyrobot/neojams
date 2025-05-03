@@ -656,6 +656,18 @@ class Annotation(JObject):
             `False` otherwise.
         """
         valid = True
+                
+        try:
+            # Use the schema's validate_annotation method to check all aspects of the annotation
+            schema.validate_annotation(self)
+        except (schema.SchemaError, schema.NamespaceError) as e:
+            if strict:
+                raise SchemaError(str(e)) from None
+            else:
+                warnings.warn(str(e), stacklevel=2)
+                valid = False
+                
+        # Additional validation using schema validator
         try:
             schema.VALIDATOR.validate(self.__json_light__(), self.__schema__)
         except jsonschema.ValidationError as invalid:
@@ -664,6 +676,7 @@ class Annotation(JObject):
             else:
                 warnings.warn(str(invalid), stacklevel=2)
                 valid = False
+                
         return valid
 
     def trim(self, start_time, end_time, strict=False):

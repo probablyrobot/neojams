@@ -25,8 +25,8 @@ def test_ns_time_valid():
 def test_ns_time_invalid(time, duration):
     ann = Annotation(namespace="onset")
 
-    # Bypass the safety checks in append
-    ann.data.add(Observation(time=time, duration=duration, value=None, confidence=None))
+    # Bypass the safety checks in append using the for_test method
+    ann.data.append(Observation.for_test(time=time, duration=duration, value=None, confidence=None))
 
     with pytest.raises(neojams.SchemaError):
         ann.validate()

@@ -67,6 +67,32 @@ class Observation(BaseModel):
                 obj = obj.copy()
                 obj["time"] = 0.0
         return super().model_validate(obj, *args, **kwargs)
+        
+    @classmethod
+    def for_test(cls, time, duration, value, confidence=None):
+        """Create an Observation instance for testing, bypassing validation.
+        
+        This method is only for use in tests to create observations 
+        with invalid time or duration values.
+        """
+        # Create a valid instance first with acceptable values
+        valid_time = 0.0 if time is not None and time < 0 else time
+        valid_duration = 0.0 if duration is not None and duration < 0 else duration
+        
+        obj = cls(
+            time=valid_time if time is not None else 0.0,
+            duration=valid_duration if duration is not None else 0.0,
+            value=value,
+            confidence=confidence
+        )
+        
+        # Then manually set the actual values to bypass validation
+        if time is not None:
+            object.__setattr__(obj, "time", time)
+        if duration is not None:
+            object.__setattr__(obj, "duration", duration)
+            
+        return obj
 
 
 class Sandbox(BaseModel):
