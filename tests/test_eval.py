@@ -2,11 +2,12 @@
 # CREATED:2016-01-16 10:38:56 by Brian McFee <brian.mcfee@nyu.edu>
 """Testing the eval module"""
 
-import neojams
 import numpy as np
 import pytest
-from test_util import srand
 from mir_eval.chord import NO_CHORD
+from test_util import srand
+
+import neojams
 
 
 # Fixtures

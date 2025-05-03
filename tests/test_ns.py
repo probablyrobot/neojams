@@ -2,10 +2,11 @@
 # CREATED:2015-05-26 12:47:35 by Brian McFee <brian.mcfee@nyu.edu>
 """Namespace schema tests"""
 
-import neojams
 import numpy as np
 import pytest
 import six
+
+import neojams
 from neojams import Annotation, Observation, SchemaError
 from tests.test_util import srand
 

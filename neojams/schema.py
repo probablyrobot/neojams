@@ -434,17 +434,17 @@ def get_dtypes(namespace):
 
 def validate_annotation(annotation):
     """Validate an annotation object against its schema.
-    
+
     Parameters
     ----------
     annotation : Annotation
         The annotation to validate
-        
+
     Returns
     -------
     bool
         True if the annotation is valid, False otherwise
-        
+
     Raises
     ------
     NamespaceError
@@ -457,32 +457,32 @@ def validate_annotation(annotation):
 
     # Get the schema for this namespace
     namespace_schema = schema(annotation.namespace)
-    
+
     # Basic validation for observations
     for obs in annotation.data:
         if hasattr(obs, "time") and obs.time < 0:
             raise SchemaError(f"Observation has negative time: {obs.time}")
-            
+
         if hasattr(obs, "duration") and obs.duration < 0:
             raise SchemaError(f"Observation has negative duration: {obs.duration}")
-            
+
         if hasattr(obs, "confidence") and obs.confidence is not None and (obs.confidence < 0 or obs.confidence > 1):
             raise SchemaError(f"Observation has invalid confidence: {obs.confidence}")
-            
+
         # Validate the value against the schema
         if hasattr(obs, "value"):
             try:
                 value_schema = namespace_schema.get("value", {})
-                
+
                 # Check for enum constraints
                 if "enum" in value_schema and obs.value not in value_schema["enum"]:
                     raise SchemaError(f"Value '{obs.value}' not in enum for namespace '{annotation.namespace}'")
-                    
+
                 # Check for oneOf constraints
                 if "oneOf" in value_schema:
                     valid = False
                     error_msgs = []
-                    
+
                     for option in value_schema["oneOf"]:
                         if "type" in option:
                             if option["type"] == "null" and obs.value is None:
@@ -508,16 +508,18 @@ def validate_annotation(annotation):
                                 break
                             else:
                                 error_msgs.append(f"Expected {option['type']}, got {type(obs.value).__name__}")
-                    
+
                     if not valid:
-                        raise SchemaError(f"Value does not match any allowed types for namespace '{annotation.namespace}': {'; '.join(error_msgs)}")
-                
+                        raise SchemaError(
+                            f"Value does not match any allowed types for namespace '{annotation.namespace}': {'; '.join(error_msgs)}"
+                        )
+
                 # Check for simple type constraints
                 elif "type" in value_schema:
                     valid_types = value_schema["type"]
                     if isinstance(valid_types, str):
                         valid_types = [valid_types]
-                        
+
                     type_valid = False
                     for valid_type in valid_types:
                         if valid_type == "null" and obs.value is None:
@@ -541,35 +543,41 @@ def validate_annotation(annotation):
                         elif valid_type == "boolean" and isinstance(obs.value, bool):
                             type_valid = True
                             break
-                            
+
                     if not type_valid:
-                        raise SchemaError(f"Expected {', '.join(valid_types)}, got {type(obs.value).__name__} for namespace '{annotation.namespace}'")
-                
+                        raise SchemaError(
+                            f"Expected {', '.join(valid_types)}, got {type(obs.value).__name__} for namespace '{annotation.namespace}'"
+                        )
+
                 # Additional validation for object types with properties
                 if isinstance(obs.value, dict) and "properties" in value_schema:
                     properties = value_schema["properties"]
-                    
+
                     # Check required properties if specified
                     if "required" in value_schema:
                         for required_prop in value_schema["required"]:
                             if required_prop not in obs.value:
-                                raise SchemaError(f"Missing required property '{required_prop}' in namespace '{annotation.namespace}'")
-                    
+                                raise SchemaError(
+                                    f"Missing required property '{required_prop}' in namespace '{annotation.namespace}'"
+                                )
+
                     # Validate each property against its schema
                     for prop_name, prop_value in obs.value.items():
                         if prop_name in properties:
                             prop_schema = properties[prop_name]
-                            
+
                             # Check enum
                             if "enum" in prop_schema and prop_value not in prop_schema["enum"]:
-                                raise SchemaError(f"Property '{prop_name}' value '{prop_value}' not in enum {prop_schema['enum']} for namespace '{annotation.namespace}'")
-                            
+                                raise SchemaError(
+                                    f"Property '{prop_name}' value '{prop_value}' not in enum {prop_schema['enum']} for namespace '{annotation.namespace}'"
+                                )
+
                             # Check type
                             if "type" in prop_schema:
                                 prop_types = prop_schema["type"]
                                 if isinstance(prop_types, str):
                                     prop_types = [prop_types]
-                                
+
                                 type_valid = False
                                 for prop_type in prop_types:
                                     if prop_type == "null" and prop_value is None:
@@ -593,30 +601,40 @@ def validate_annotation(annotation):
                                     elif prop_type == "boolean" and isinstance(prop_value, bool):
                                         type_valid = True
                                         break
-                                
+
                                 if not type_valid:
-                                    raise SchemaError(f"Property '{prop_name}' expected type {', '.join(prop_types)}, got {type(prop_value).__name__} for namespace '{annotation.namespace}'")
-                            
+                                    raise SchemaError(
+                                        f"Property '{prop_name}' expected type {', '.join(prop_types)}, got {type(prop_value).__name__} for namespace '{annotation.namespace}'"
+                                    )
+
                             # Check minimum value
                             if "minimum" in prop_schema and isinstance(prop_value, (int, float)):
                                 min_value = prop_schema["minimum"]
                                 is_exclusive = prop_schema.get("exclusiveMinimum", False)
-                                
+
                                 if is_exclusive and prop_value <= min_value:
-                                    raise SchemaError(f"Property '{prop_name}' must be greater than {min_value} for namespace '{annotation.namespace}'")
+                                    raise SchemaError(
+                                        f"Property '{prop_name}' must be greater than {min_value} for namespace '{annotation.namespace}'"
+                                    )
                                 elif not is_exclusive and prop_value < min_value:
-                                    raise SchemaError(f"Property '{prop_name}' must be greater than or equal to {min_value} for namespace '{annotation.namespace}'")
-                            
+                                    raise SchemaError(
+                                        f"Property '{prop_name}' must be greater than or equal to {min_value} for namespace '{annotation.namespace}'"
+                                    )
+
                             # Check maximum value
                             if "maximum" in prop_schema and isinstance(prop_value, (int, float)):
                                 max_value = prop_schema["maximum"]
                                 is_exclusive = prop_schema.get("exclusiveMaximum", False)
-                                
+
                                 if is_exclusive and prop_value >= max_value:
-                                    raise SchemaError(f"Property '{prop_name}' must be less than {max_value} for namespace '{annotation.namespace}'")
+                                    raise SchemaError(
+                                        f"Property '{prop_name}' must be less than {max_value} for namespace '{annotation.namespace}'"
+                                    )
                                 elif not is_exclusive and prop_value > max_value:
-                                    raise SchemaError(f"Property '{prop_name}' must be less than or equal to {max_value} for namespace '{annotation.namespace}'")
-                
+                                    raise SchemaError(
+                                        f"Property '{prop_name}' must be less than or equal to {max_value} for namespace '{annotation.namespace}'"
+                                    )
+
             except SchemaError:
                 raise
             except Exception as e:

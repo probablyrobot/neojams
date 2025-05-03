@@ -46,10 +46,10 @@ def clicks(annotation, sr=22050, length=None, **kwargs):
     """
 
     interval, _ = annotation.to_interval_values()
-    
+
     # Convert the list of tuples to a numpy array for proper indexing
     interval_array = np.array(interval)
-    
+
     return filter_kwargs(mir_eval.sonify.clicks, interval_array[:, 0], fs=sr, length=length, **kwargs)
 
 
@@ -60,10 +60,10 @@ def downbeat(annotation, sr=22050, length=None, **kwargs):
     downbeat_click = mkclick(440 * 3, sr=sr)
 
     intervals, values = annotation.to_interval_values()
-    
+
     # Convert intervals to numpy array for proper indexing
     intervals_array = np.array(intervals)
-    
+
     beats, downbeats = [], []
 
     for time, value in zip(intervals_array[:, 0], values, strict=False):
@@ -90,7 +90,7 @@ def multi_segment(annotation, sr=22050, length=None, **kwargs):
     DURATION = 0.1
 
     h_int, _ = hierarchy_flatten(annotation)
-    
+
     # Convert lists to numpy arrays
     h_int_np = [np.array(x) for x in h_int]
 
@@ -111,7 +111,7 @@ def chord(annotation, sr=22050, length=None, **kwargs):
     """
 
     intervals, chords = annotation.to_interval_values()
-    
+
     # Convert intervals to numpy array for proper mir_eval compatibility
     intervals_array = np.array(intervals)
 
@@ -157,7 +157,7 @@ def piano_roll(annotation, sr=22050, length=None, **kwargs):
     """
 
     intervals, pitches = annotation.to_interval_values()
-    
+
     # Convert intervals to numpy array
     intervals_array = np.array(intervals)
 

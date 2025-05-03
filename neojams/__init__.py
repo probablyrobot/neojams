@@ -10,20 +10,9 @@ from itertools import chain
 
 # Import the necessary modules
 from . import display, eval, schema, sonify, util
-from .core import (
-    JAMS,
-    Annotation,
-    AnnotationArray,
-    AnnotationMetadata,
-    Curator,
-    FileMetadata,
-    JObject,
-    Observation,
-    Sandbox,
-    load,
-)
+from .core import (JAMS, Annotation, AnnotationArray, AnnotationMetadata,
+                   Curator, FileMetadata, JObject, Observation, Sandbox, load)
 from .exceptions import JamsError, NamespaceError, ParameterError, SchemaError
-
 # Import the Pydantic models
 from .models import JAMS as JAMSModel
 from .models import Annotation as AnnotationModel
@@ -42,7 +31,7 @@ try:
     initial_suppress = os.environ.get("NEOJAMS_SUPPRESS_WARNINGS")
     if initial_suppress is None and "pytest" in sys.modules:
         os.environ["NEOJAMS_SUPPRESS_WARNINGS"] = "1"
-        
+
     # Modern importlib.resources approach
     for ns in (p.rglob("*.json") for p in resources.files("neojams.schemata.namespaces").iterdir()):
         for file_path in ns:

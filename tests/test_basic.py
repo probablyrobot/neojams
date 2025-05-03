@@ -2,8 +2,8 @@
 # CREATED:2023-06-12 15:12:15 by User <user@example.com>
 """Basic functionality tests"""
 
-import pytest
 import numpy as np
+import pytest
 
 import neojams
 from neojams import Annotation

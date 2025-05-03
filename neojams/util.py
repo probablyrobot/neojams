@@ -250,5 +250,5 @@ def query_pop(query, prefix, sep="."):
         Otherwise, the entire query is returned.
     """
     if query.startswith(prefix + sep):
-        return query[len(prefix + sep):]
+        return query[len(prefix + sep) :]
     return query

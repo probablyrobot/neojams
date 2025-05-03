@@ -44,7 +44,7 @@ def _conversion(target, source):
 
 def extract_data(annotation):
     """Extract the data from an annotation and clear it.
-    
+
     This replaces the old pop_data method, which no longer exists.
     """
     data = list(annotation.data)  # Make a copy of the data

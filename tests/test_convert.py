@@ -2,10 +2,11 @@
 # CREATED:2016-02-10 10:53:39 by Brian McFee <brian.mcfee@nyu.edu>
 """Namespace conversion tests"""
 
-import neojams
-from neojams import NamespaceError
 import numpy as np
 import pytest
+
+import neojams
+from neojams import NamespaceError
 
 
 def test_bad_target():

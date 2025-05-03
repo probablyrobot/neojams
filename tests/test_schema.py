@@ -2,16 +2,17 @@
 # CREATED:2015-02-04 16:39:00 by Brian McFee <brian.mcfee@nyu.edu>
 """Schema tests"""
 
-import os
 import json
+import os
 
 # Set environment variable to suppress namespace file warnings during tests
 os.environ["NEOJAMS_SUPPRESS_WARNINGS"] = "1"
 
 import pytest
+from six.moves import reload_module
+
 import neojams
 from neojams import NamespaceError
-from six.moves import reload_module
 
 
 @pytest.mark.parametrize("ns_key", ["pitch_hz", "beat"])

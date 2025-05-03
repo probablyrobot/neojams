@@ -4,10 +4,11 @@
 """Sonification tests"""
 
 import librosa
-import neojams
 import numpy as np
 import pytest
 from test_eval import create_hierarchy
+
+import neojams
 
 
 def test_no_sonify():

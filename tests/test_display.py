@@ -4,16 +4,17 @@
 """Test display functions"""
 
 import os
-import six
 import tempfile
 
+import matplotlib
 import numpy as np
+import six
+
 import neojams
 from neojams import NamespaceError
-import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
 import pytest
 
 

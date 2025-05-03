@@ -8,9 +8,10 @@ import sys
 import tempfile
 import warnings
 
-import neojams
 import numpy as np
 import pytest
+
+import neojams
 
 
 # Borrowed from sklearn

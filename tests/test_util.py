@@ -5,13 +5,14 @@
 
 import json
 import os
-import six
 import sys
 import tempfile
+
 import numpy as np
+import pytest
+import six
 
 from neojams import core, util
-import pytest
 
 
 def srand(seed=628318530):
