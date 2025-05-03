@@ -6,13 +6,8 @@ This script shows how to create and validate JAMS objects using Pydantic models.
 """
 
 import json
-from neojams import (
-    JAMSModel, 
-    AnnotationModel, 
-    AnnotationMetadataModel,
-    ObservationModel, 
-    CuratorModel
-)
+
+from neojams import AnnotationMetadataModel, AnnotationModel, CuratorModel, JAMSModel, ObservationModel
 
 
 def main():
@@ -68,7 +63,7 @@ def main():
     # Example of validation error
     try:
         # This will fail because duration cannot be negative
-        invalid_obs = ObservationModel(time=1.0, duration=-1.0, value="D:min")
+        ObservationModel(time=1.0, duration=-1.0, value="D:min")
     except Exception as e:
         print(f"\nValidation error example: {e}")
 

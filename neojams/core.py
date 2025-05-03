@@ -47,7 +47,7 @@ from sortedcontainers import SortedKeyList
 
 from . import schema
 from .compatibility import iteritems, string_types
-from .exceptions import JamsError, ParameterError, SchemaError, NamespaceError
+from .exceptions import JamsError, ParameterError, SchemaError
 from .models import Observation
 from .version import JAMS_VERSION
 
@@ -664,7 +664,7 @@ class Annotation(JObject):
             if strict:
                 raise SchemaError(str(e)) from None
             else:
-                warnings.warn(str(e))
+                warnings.warn(str(e), stacklevel=2)
                 valid = False
 
         return valid
@@ -1146,7 +1146,7 @@ class FileMetadata(JObject):
             if strict:
                 raise SchemaError("FileMetadata validation failed: duration cannot be None")
             else:
-                warnings.warn("FileMetadata validation warning: duration is None", UserWarning)
+                warnings.warn("FileMetadata validation warning: duration is None", UserWarning, stacklevel=2)
         # Call the superclass validate method
         super().validate(strict=strict)
 
@@ -1179,7 +1179,8 @@ class AnnotationArray(list):
         if annotations is not None:
             if callable(annotations):
                 raise TypeError(
-                    "AnnotationArray.__init__: 'annotations' argument must be iterable, not a method. Did you mean to call __json__()?"
+                    "AnnotationArray.__init__: 'annotations' argument must be iterable, "
+                    "not a method. Did you mean to call __json__()?"
                 )
             if isinstance(annotations, list):
                 for obj in annotations:
@@ -1263,7 +1264,7 @@ class AnnotationArray(list):
 
     @property
     def __json(self):
-        warnings.warn("Use __json__() as a method, not as a property.")
+        warnings.warn("Use __json__() as a method, not as a property.", stacklevel=2)
         return self.__json__
 
     def trim(self, start_time, end_time, strict=False):
@@ -1618,7 +1619,7 @@ class JAMS(JObject):
                 if strict:
                     raise SchemaError(f"Annotation validation failed: {str(e)}") from None
                 else:
-                    warnings.warn(f"Annotation validation warning: {str(e)}", UserWarning)
+                    warnings.warn(f"Annotation validation warning: {str(e)}", UserWarning, stacklevel=2)
                     valid = False
 
         # Also validate file_metadata
@@ -1629,7 +1630,7 @@ class JAMS(JObject):
             if strict:
                 raise SchemaError(f"FileMetadata validation failed: {str(e)}") from None
             else:
-                warnings.warn(f"FileMetadata validation warning: {str(e)}", UserWarning)
+                warnings.warn(f"FileMetadata validation warning: {str(e)}", UserWarning, stacklevel=2)
                 valid = False
 
         return valid

@@ -19,7 +19,7 @@ def clean_warning_registry():
     """Safe way to reset warnings"""
     warnings.resetwarnings()
     reg = "__warningregistry__"
-    for mod_name, mod in list(sys.modules.items()):
+    for _mod_name, mod in list(sys.modules.items()):
         if hasattr(mod, reg):
             getattr(mod, reg).clear()
 
@@ -496,7 +496,9 @@ jam.annotations[0].sandbox['foo'] = None
     ],
 )
 def test_jams_search(query, expected):
-    result = jam.search(**query)
+    jam.search(**query)
+    # Perform equality checks directly on expected items
+    assert jam.search(**query) == expected
 
 
 def test_jams_validate_good():
@@ -517,7 +519,7 @@ def jam_validate():
 def test_jams_validate_warning(jam_validate):
     clean_warning_registry()
 
-    with pytest.warns(UserWarning, match=".*(Failed validating).*") as out:
+    with pytest.warns(UserWarning, match=".*(Failed validating).*"):
         jam_validate.validate(strict=False)
 
 
@@ -583,7 +585,7 @@ def test_jams_bad_jam_warning():
 
     clean_warning_registry()
 
-    with pytest.warns(UserWarning, match=".*(Failed validating).*") as out:
+    with pytest.warns(UserWarning, match=".*(Failed validating).*"):
         jam.validate(strict=False)
 
 
@@ -1072,7 +1074,7 @@ def test_annotation_to_samples_fail_neg():
     ann.append(time=1.5, duration=0.5, value="four", confidence=0.4)
 
     with pytest.raises(neojams.ParameterError):
-        values = ann.to_samples([-0.2, 0.4, 0.75, 1.25, 1.75, 1.4])
+        ann.to_samples([-0.2, 0.4, 0.75, 1.25, 1.75, 1.4])
 
 
 def test_annotation_to_samples_fail_shape():
@@ -1084,7 +1086,7 @@ def test_annotation_to_samples_fail_shape():
     ann.append(time=1.5, duration=0.5, value="four", confidence=0.4)
 
     with pytest.raises(neojams.ParameterError):
-        values = ann.to_samples([[0.2, 0.4, 0.75, 1.25, 1.75, 1.4]])
+        ann.to_samples([[0.2, 0.4, 0.75, 1.25, 1.75, 1.4]])
 
 
 def test_annotation_trim_outside():

@@ -6,8 +6,8 @@ This module contains Pydantic models that represent the core NeoJAMS data struct
 with proper type checking and validation.
 """
 
-from typing import (Any, ClassVar, ItemsView, Iterator, KeysView, Tuple,
-                    ValuesView)
+from collections.abc import ItemsView, Iterator, KeysView, ValuesView
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,7 @@ class Observation(BaseModel):
     confidence: float | None = Field(None, description="Confidence value")
 
     # Provide compatibility with namedtuple interface used in legacy core code
-    _fields: ClassVar[Tuple[str, ...]] = ("time", "duration", "value", "confidence")
+    _fields: ClassVar[tuple[str, ...]] = ("time", "duration", "value", "confidence")
 
     model_config = {
         "validate_assignment": True,
