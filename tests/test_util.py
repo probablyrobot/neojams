@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
 # CREATED: 2015-03-07 19:25:41 by Brian McFee <brian.mcfee@nyu.edu>
 """Utility tests"""
 
-import json
 import os
 import sys
 import tempfile

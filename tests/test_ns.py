@@ -59,7 +59,7 @@ def test_ns_beat_invalid():
 def test_ns_beat_position_valid():
     ann = Annotation(namespace="beat_position")
 
-    ann.append(time=0, duration=1.0, value=dict(position=1, measure=1, num_beats=3, beat_units=4))
+    ann.append(time=0, duration=1.0, value={"position": 1, "measure": 1, "num_beats": 3, "beat_units": 4})
 
     ann.validate()
 
@@ -87,7 +87,7 @@ def test_ns_beat_position_valid():
     ],
 )
 def test_ns_beat_position_invalid(key, value):
-    data = dict(position=1, measure=1, num_beats=3, beat_units=4)
+    data = {"position": 1, "measure": 1, "num_beats": 3, "beat_units": 4}
     data[key] = value
 
     ann = Annotation(namespace="beat_position")
@@ -99,7 +99,7 @@ def test_ns_beat_position_invalid(key, value):
 
 @parametrize("key", ["position", "measure", "num_beats", "beat_units"])
 def test_ns_beat_position_missing(key):
-    data = dict(position=1, measure=1, num_beats=3, beat_units=4)
+    data = {"position": 1, "measure": 1, "num_beats": 3, "beat_units": 4}
     del data[key]
     ann = Annotation(namespace="beat_position")
     ann.append(time=0, duration=1.0, value=data)
@@ -378,7 +378,7 @@ def test_ns_chord_harte_invalid(value):
         ann.validate()
 
 
-@parametrize("value", [dict(tonic="B", chord="bII7"), dict(tonic=six.u("Gb"), chord=six.u("ii7/#V"))])
+@parametrize("value", [{"tonic": "B", "chord": "bII7"}, {"tonic": six.u("Gb"), "chord": six.u("ii7/#V")}])
 def test_ns_chord_roman_valid(value):
     ann = Annotation(namespace="chord_roman")
     ann.append(time=0, duration=1.0, value=value)
@@ -404,7 +404,7 @@ def test_ns_chord_roman_valid(value):
     ],
 )
 def test_ns_chord_roman_invalid(key, value):
-    data = dict(tonic="E", chord="iv64")
+    data = {"tonic": "E", "chord": "iv64"}
     data[key] = value
 
     ann = Annotation(namespace="chord_roman")
@@ -415,7 +415,7 @@ def test_ns_chord_roman_invalid(key, value):
 
 @parametrize("key", ["tonic", "chord"])
 def test_ns_chord_roman_missing(key):
-    data = dict(tonic="E", chord="iv64")
+    data = {"tonic": "E", "chord": "iv64"}
     del data[key]
 
     ann = Annotation(namespace="chord_roman")
@@ -424,7 +424,7 @@ def test_ns_chord_roman_missing(key):
         ann.validate()
 
 
-@parametrize("value", [dict(tonic="B", pitch=0), dict(tonic=six.u("Gb"), pitch=11)])
+@parametrize("value", [{"tonic": "B", "pitch": 0}, {"tonic": six.u("Gb"), "pitch": 11}])
 def test_ns_pitch_class_valid(value):
     ann = Annotation(namespace="pitch_class")
     ann.append(time=0, duration=1.0, value=value)
@@ -448,7 +448,7 @@ def test_ns_pitch_class_valid(value):
     ],
 )
 def test_ns_pitch_class_invalid(key, value):
-    data = dict(tonic="E", pitch=7)
+    data = {"tonic": "E", "pitch": 7}
     data[key] = value
     ann = Annotation(namespace="pitch_class")
     ann.append(time=0, duration=1.0, value=data)
@@ -458,7 +458,7 @@ def test_ns_pitch_class_invalid(key, value):
 
 @parametrize("key", ["tonic", "pitch"])
 def test_ns_pitch_class_missing(key):
-    data = dict(tonic="E", pitch=7)
+    data = {"tonic": "E", "pitch": 7}
     del data[key]
     ann = Annotation(namespace="pitch_class")
     ann.append(time=0, duration=1.0, value=data)
@@ -538,8 +538,8 @@ def test_ns_pitch_class_missing(key):
         ("blob", six.u("a unicode tag")),
         ("blob", 23),
         ("blob", None),
-        ("blob", dict()),
-        ("blob", list()),
+        ("blob", {}),
+        ("blob", []),
         (
             "lyrics_bow",
             [["foo", 23]],
@@ -652,8 +652,8 @@ def test_ns_tag_invalid_type(namespace, value):
         ("vector", six.u("a unicode tag")),
         ("vector", 23),
         ("vector", None),
-        ("vector", dict()),
-        ("vector", list()),
+        ("vector", {}),
+        ("vector", []),
         ("lyrics_bow", ("foo", 23)),
         ("lyrics_bow", [("foo", -23)]),
         ("lyrics_bow", [(23, "foo")]),
@@ -691,8 +691,8 @@ def test_ns_tag_msd_tagtraum_cd1_bad_confidence(confidence):
 @parametrize(
     "pattern",
     [
-        dict(midi_pitch=3, morph_pitch=5, staff=1, pattern_id=1, occurrence_id=1),
-        dict(midi_pitch=-3, morph_pitch=-1.5, staff=1.0, pattern_id=1, occurrence_id=1),
+        {"midi_pitch": 3, "morph_pitch": 5, "staff": 1, "pattern_id": 1, "occurrence_id": 1},
+        {"midi_pitch": -3, "morph_pitch": -1.5, "staff": 1.0, "pattern_id": 1, "occurrence_id": 1},
     ],
 )
 def test_ns_pattern_valid(pattern):
@@ -702,9 +702,9 @@ def test_ns_pattern_valid(pattern):
 
 
 @parametrize("key", ["midi_pitch", "morph_pitch", "staff", "pattern_id", "occurrence_id"])
-@parametrize("value", ["foo", None, dict(), list()])
+@parametrize("value", ["foo", None, {}, []])
 def test_ns_pattern_invalid(key, value):
-    data = dict(midi_pitch=3, morph_pitch=5, staff=1, pattern_id=1, occurrence_id=1)
+    data = {"midi_pitch": 3, "morph_pitch": 5, "staff": 1, "pattern_id": 1, "occurrence_id": 1}
     data[key] = value
 
     ann = Annotation(namespace="pattern_jku")
@@ -717,7 +717,7 @@ def test_ns_pattern_invalid(key, value):
 @parametrize("key", ["pattern_id", "occurrence_id"])
 @parametrize("value", [-1, 0, 0.5])
 def test_ns_pattern_invalid_bounded(key, value):
-    data = dict(midi_pitch=3, morph_pitch=5, staff=1, pattern_id=1, occurrence_id=1)
+    data = {"midi_pitch": 3, "morph_pitch": 5, "staff": 1, "pattern_id": 1, "occurrence_id": 1}
     data[key] = value
 
     ann = Annotation(namespace="pattern_jku")
@@ -730,14 +730,14 @@ def test_ns_pattern_invalid_bounded(key, value):
 @parametrize("level", [0, 2])
 def test_ns_multi_segment_label(label, level):
     ann = Annotation(namespace="multi_segment")
-    ann.append(time=0, duration=1, value=dict(label=label, level=level))
+    ann.append(time=0, duration=1, value={"label": label, "level": level})
     ann.validate()
 
 
 @parametrize("label", [23, None])
 def test_ns_multi_segment_invalid_label(label):
     ann = Annotation(namespace="multi_segment")
-    ann.append(time=0, duration=1, value=dict(label=label, level=0))
+    ann.append(time=0, duration=1, value={"label": label, "level": 0})
     with pytest.raises(SchemaError):
         ann.validate()
 
@@ -745,14 +745,14 @@ def test_ns_multi_segment_invalid_label(label):
 @parametrize("level", [-1, "foo", None])
 def test_ns_multi_segment_invalid_level(level):
     ann = Annotation(namespace="multi_segment")
-    ann.append(time=0, duration=1, value=dict(label="a segment", level=level))
+    ann.append(time=0, duration=1, value={"label": "a segment", "level": level})
     with pytest.raises(SchemaError):
         ann.validate()
 
 
 def test_ns_multi_segment_invalid_both():
     ann = Annotation(namespace="multi_segment")
-    ann.append(time=0, duration=1, value=dict(label=None, level=None))
+    ann.append(time=0, duration=1, value={"label": None, "level": None})
     with pytest.raises(SchemaError):
         ann.validate()
 

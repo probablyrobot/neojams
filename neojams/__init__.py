@@ -10,9 +10,20 @@ from itertools import chain
 
 # Import the necessary modules
 from . import display, eval, schema, sonify, util
-from .core import (JAMS, Annotation, AnnotationArray, AnnotationMetadata,
-                   Curator, FileMetadata, JObject, Observation, Sandbox, load)
+from .core import (
+    JAMS,
+    Annotation,
+    AnnotationArray,
+    AnnotationMetadata,
+    Curator,
+    FileMetadata,
+    JObject,
+    Observation,
+    Sandbox,
+    load,
+)
 from .exceptions import JamsError, NamespaceError, ParameterError, SchemaError
+
 # Import the Pydantic models
 from .models import JAMS as JAMSModel
 from .models import Annotation as AnnotationModel

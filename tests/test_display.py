@@ -1,14 +1,9 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
 # CREATED:2015-05-18 14:35:43 by Brian McFee <brian.mcfee@nyu.edu>
 """Test display functions"""
 
-import os
-import tempfile
 
 import matplotlib
-import numpy as np
-import six
 
 import neojams
 from neojams import NamespaceError
@@ -47,17 +42,17 @@ def test_display_jam():
     neojams.display.display_jam(jam)
 
     plt.figure()
-    neojams.display.display_jam(jam, annotation_ids=set([1]))
+    neojams.display.display_jam(jam, annotation_ids={1})
 
     plt.figure()
-    neojams.display.display_jam(jam, annotation_ids=set([0, -1]))
+    neojams.display.display_jam(jam, annotation_ids={0, -1})
 
     plt.figure()
-    neojams.display.display_jam(jam, annotation_ids=set([0, 2]),
+    neojams.display.display_jam(jam, annotation_ids={0, 2},
                              label='Testing display_jam')
 
     plt.figure()
-    neojams.display.display_jam(jam, annotation_ids=set([0, 2]), time_range=[1, 3],
+    neojams.display.display_jam(jam, annotation_ids={0, 2}, time_range=[1, 3],
                              label='Testing display_jam')
 
     plt.figure()

@@ -2,7 +2,6 @@
 # CREATED:2015-02-04 16:39:00 by Brian McFee <brian.mcfee@nyu.edu>
 """Schema tests"""
 
-import json
 import os
 
 # Set environment variable to suppress namespace file warnings during tests
@@ -20,7 +19,7 @@ def test_schema_namespace(ns_key):
     # Get the schema
     schema = neojams.schema.namespace(ns_key)
     # Make sure it has the correct properties
-    valid_keys = set(["time", "duration", "value", "confidence"])
+    valid_keys = {"time", "duration", "value", "confidence"}
     for key in schema["properties"]:
         assert key in valid_keys
     for key in ["time", "duration"]:
@@ -77,7 +76,7 @@ def test_schema_local(local_namespace):
         schema = neojams.schema.namespace(ns_key)
 
         # Make sure it has the correct properties
-        valid_keys = set(["time", "duration", "value", "confidence"])
+        valid_keys = {"time", "duration", "value", "confidence"}
         for key in schema["properties"]:
             assert key in valid_keys
 

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
 # CREATED:2016-02-11 12:07:58 by Brian McFee <brian.mcfee@nyu.edu>
 """Sonification tests"""
 
-import librosa
 import numpy as np
 import pytest
 from test_eval import create_hierarchy
@@ -115,7 +113,7 @@ def beat_pos_ann():
     ann = neojams.Annotation(namespace="beat_position")
 
     for i, t in enumerate(np.arange(0, 10, 0.25)):
-        ann.append(time=t, duration=0, value=dict(position=1 + i % 4, measure=1 + i // 4, num_beats=4, beat_units=4))
+        ann.append(time=t, duration=0, value={"position": 1 + i % 4, "measure": 1 + i // 4, "num_beats": 4, "beat_units": 4})
     return ann
 
 

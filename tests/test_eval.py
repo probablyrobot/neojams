@@ -4,7 +4,6 @@
 
 import numpy as np
 import pytest
-from mir_eval.chord import NO_CHORD
 from test_util import srand
 
 import neojams
@@ -39,7 +38,7 @@ def create_hierarchy(values, offset=0.0, duration=20):
         durations.append(duration + offset - times[-1])
 
         for t, d, v in zip(times, durations, labels, strict=False):
-            ann.append(time=t, duration=d, value=dict(label=v, level=level))
+            ann.append(time=t, duration=d, value={"label": v, "level": level})
 
     return ann
 
