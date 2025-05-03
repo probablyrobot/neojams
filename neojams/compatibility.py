@@ -15,6 +15,10 @@ string_types = (str,)
 # Dictionary helpers
 def iteritems(d):
     """Return an iterator over dictionary (key, value) pairs."""
+    # Handle case where d is a method (like __json__) that returns a dictionary
+    if callable(d) and not hasattr(d, 'items'):
+        return d().items()
+    # Handle regular dictionary case
     return d.items()
 
 

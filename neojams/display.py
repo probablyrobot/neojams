@@ -83,6 +83,12 @@ def pitch_contour(annotation, **kwargs):
 
     times, values = annotation.to_interval_values()
 
+    # Convert times to numpy array if it's a list
+    if isinstance(times, list):
+        times_array = np.array(times)
+    else:
+        times_array = times
+
     indices = np.unique([v["index"] for v in values])
 
     for idx in indices:
@@ -91,7 +97,8 @@ def pitch_contour(annotation, **kwargs):
         unvoiced = ~np.asarray([values[r]["voiced"] for r in rows])
         freqs[unvoiced] *= -1
 
-        ax = mir_eval.display.pitch(times[rows, 0], freqs, unvoiced=True, ax=ax, **kwargs)
+        # Use the first column of the times array for the time values
+        ax = mir_eval.display.pitch(times_array[rows, 0], freqs, unvoiced=True, ax=ax, **kwargs)
     return ax
 
 
@@ -248,3 +255,249 @@ def display_multi(annotations, fig_kw=None, meta=True, **kwargs):
         display(ann, meta=meta, **kwargs)
 
     return fig, axs
+
+
+def display_beat(jam, annotation_ids=None, time_range=None, label=None, **kwargs):
+    """Display beat annotations in a jams object.
+
+    Parameters
+    ----------
+    jam : jams.JAMS
+        The JAMS object containing beat annotations
+
+    annotation_ids : list or None
+        IDs of the annotations to include
+        If None, all beat annotations are displayed
+
+    time_range : list of two floats or None
+        Time range (in seconds) for the visualization
+        If None, the entire timeline is displayed
+
+    label : str or None
+        Title for the plot
+
+    kwargs
+        Additional keyword arguments to mir_eval.display functions
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure with the beat annotations displayed
+    """
+    if annotation_ids is None:
+        # Direct search might not work, so let's filter manually
+        annotations = []
+        for ann in jam.annotations:
+            if ann.namespace == "beat":
+                annotations.append(ann)
+    else:
+        annotations = []
+        for ann_id in annotation_ids:
+            if ann_id < len(jam.annotations):
+                if jam.annotations[ann_id].namespace == "beat":
+                    annotations.append(jam.annotations[ann_id])
+
+    if not annotations:
+        raise ParameterError("No beat annotations found")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    for ann in annotations:
+        times, values = ann.to_interval_values()
+        if time_range is not None:
+            # Filter by time range
+            if isinstance(times, list):
+                mask = np.array([(t[0] >= time_range[0]) and (t[0] <= time_range[1]) for t in times])
+                times = [times[i] for i in range(len(times)) if mask[i]]
+                if values:
+                    values = [v for i, v in enumerate(values) if mask[i]]
+            else:
+                mask = (times[:, 0] >= time_range[0]) & (times[:, 0] <= time_range[1])
+                times = times[mask]
+                if values:
+                    values = [v for i, v in enumerate(values) if mask[i]]
+
+        if any(values):
+            labels = values
+        else:
+            labels = None
+
+        ax = mir_eval.display.events(times, labels=labels, ax=ax, **kwargs)
+
+    if label is not None:
+        ax.set_title(label)
+
+    return fig
+
+
+def display_hierarchy(jam, annotation_ids=None, time_range=None, label=None, **kwargs):
+    """Display hierarchical segmentation annotations in a jams object.
+
+    Parameters
+    ----------
+    jam : jams.JAMS
+        The JAMS object containing segmentation annotations
+
+    annotation_ids : list or None
+        IDs of the annotations to include
+        If None, all segment annotations are displayed
+
+    time_range : list of two floats or None
+        Time range (in seconds) for the visualization
+        If None, the entire timeline is displayed
+
+    label : str or None
+        Title for the plot
+
+    kwargs
+        Additional keyword arguments to mir_eval.display functions
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure with the segmentation hierarchy displayed
+    """
+    segment_namespaces = [
+        "segment_open",
+        "segment_tut",
+        "segment_salami_lower",
+        "segment_salami_upper",
+        "segment_salami_function",
+    ]
+
+    if annotation_ids is None:
+        # Get all segment annotations manually
+        annotations = []
+        for ann in jam.annotations:
+            if ann.namespace in segment_namespaces:
+                annotations.append(ann)
+    else:
+        annotations = []
+        for ann_id in annotation_ids:
+            if ann_id < len(jam.annotations):
+                if jam.annotations[ann_id].namespace in segment_namespaces:
+                    annotations.append(jam.annotations[ann_id])
+
+    if not annotations:
+        raise NamespaceError("No segmentation annotations found")
+
+    # Flatten the hierarchy
+    htimes, hlabels = [], []
+    for ann in annotations:
+        h_t, h_l = hierarchy_flatten(ann)
+        htimes.append(h_t[0])
+        hlabels.append(h_l[0])
+
+    if time_range is not None:
+        # Filter by time range
+        for i in range(len(htimes)):
+            if isinstance(htimes[i], list):
+                mask = np.array([(t[0] >= time_range[0]) and (t[1] <= time_range[1]) for t in htimes[i]])
+                htimes[i] = [htimes[i][j] for j in range(len(htimes[i])) if mask[j]]
+                hlabels[i] = [label_item for j, label_item in enumerate(hlabels[i]) if mask[j]]
+            else:
+                mask = (htimes[i][:, 0] >= time_range[0]) & (htimes[i][:, 1] <= time_range[1])
+                htimes[i] = htimes[i][mask]
+                hlabels[i] = [label_item for j, label_item in enumerate(hlabels[i]) if mask[j]]
+
+    # Convert lists to numpy arrays
+    htimes = [np.asarray(ht) for ht in htimes]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    ax = mir_eval.display.hierarchy(htimes, hlabels, ax=ax, **kwargs)
+
+    if label is not None:
+        ax.set_title(label)
+
+    return fig
+
+
+def display_jam(jam, annotation_ids=None, time_range=None, label=None, **kwargs):
+    """Display all visualizable annotations in a JAMS object.
+
+    Parameters
+    ----------
+    jam : jams.JAMS
+        The JAMS object to display
+
+    annotation_ids : list or None
+        IDs of the annotations to include
+        If None, all visualizable annotations are displayed
+
+    time_range : list of two floats or None
+        Time range (in seconds) for the visualization
+        If None, the entire timeline is displayed
+
+    label : str or None
+        Title for the plot
+
+    kwargs
+        Additional keyword arguments to mir_eval.display functions
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure with all visualizable annotations
+    """
+    if annotation_ids is None:
+        # Get all displayable annotations
+        annotations = []
+        for ann in jam.annotations:
+            for namespace in VIZ_MAPPING:
+                if can_convert(ann, namespace):
+                    annotations.append(ann)
+                    break
+    else:
+        annotations = []
+        for ann_id in annotation_ids:
+            if ann_id < len(jam.annotations):
+                for namespace in VIZ_MAPPING:
+                    if can_convert(jam.annotations[ann_id], namespace):
+                        annotations.append(jam.annotations[ann_id])
+                        break
+
+    if not annotations:
+        raise ParameterError("No displayable annotations found")
+
+    fig, axs = plt.subplots(nrows=len(annotations), ncols=1, sharex=True)
+
+    # MPL is stupid when making singleton subplots.
+    # We catch this and make it always iterable.
+    if len(annotations) == 1:
+        axs = [axs]
+
+    for ann, ax in zip(annotations, axs, strict=False):
+        kwargs["ax"] = ax
+
+        if time_range is not None:
+            # Create a time-range filtered version of the annotation
+            filtered_ann = ann.trim(time_range[0], time_range[1], strict=False)
+            display(filtered_ann, meta=True, **kwargs)
+        else:
+            display(ann, meta=True, **kwargs)
+
+    if label is not None:
+        fig.suptitle(label)
+
+    return fig
+
+
+def __check_axes(ax):
+    """Check if an axis is provided and create one if not.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes or None
+        Axis to check
+
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+        New or provided axis
+    """
+    if ax is None:
+        _, ax = plt.subplots()
+    return ax

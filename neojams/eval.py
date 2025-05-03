@@ -255,6 +255,12 @@ def hierarchy_flatten(annotation):
 
     intervals, values = annotation.to_interval_values()
 
+    # Handle non-multi_segment namespaces
+    if annotation.namespace.startswith('segment_') and annotation.namespace != 'multi_segment':
+        # For segment_tut and other segment namespaces, create single-level hierarchy
+        # Assuming string values for segment namespaces
+        return [intervals], [values]
+
     ordering = {}
 
     for interval, value in zip(intervals, values, strict=False):
