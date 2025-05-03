@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "neojams"
-version = "0.2.0"
+version = "0.1.0"
 description = "JAMS: A JSON Annotated Music Specification"
 authors = ["NeoJAMS development team"]
 license = "ISC"
