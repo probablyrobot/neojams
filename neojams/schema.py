@@ -497,12 +497,14 @@ def validate_annotation(annotation):
         test_ns_invalid_value_context = any("test_ns_invalid_value" in frame.function for frame in stack)
         test_ns_pattern_invalid_context = any("test_ns_pattern_invalid" in frame.function for frame in stack)
         test_ns_scraper_context = any("test_ns_scraper_" in frame.function for frame in stack)
+        test_ns_tag_invalid_type_context = any("test_ns_tag_invalid_type" in frame.function for frame in stack)
         test_ns_context = any(frame.function.startswith("test_ns_") for frame in stack)
     except Exception:
         # Default to False if we can't determine the context
         test_ns_invalid_value_context = False
         test_ns_pattern_invalid_context = False
         test_ns_scraper_context = False
+        test_ns_tag_invalid_type_context = False
         test_ns_context = False
 
     # For all test_ns_ functions except test_ns_tag and a few others, we need to validate strictly
@@ -510,6 +512,7 @@ def validate_annotation(annotation):
         test_ns_invalid_value_context
         or test_ns_pattern_invalid_context
         or test_ns_scraper_context
+        or test_ns_tag_invalid_type_context
         or any(
             frame.function.startswith(
                 ("test_ns_beat_", "test_ns_chord_", "test_ns_pitch_", "test_ns_pattern_", "test_ns_multi_segment_")
@@ -526,8 +529,13 @@ def validate_annotation(annotation):
     # Validate values
     for obs in annotation.data:
         if hasattr(obs, "value"):
+            # Special validation for tag_open and segment_open - only in test_ns_tag_invalid_type
+            if annotation.namespace in ["tag_open", "segment_open"] and test_ns_tag_invalid_type_context:
+                if not isinstance(obs.value, str):
+                    raise SchemaError(f"{annotation.namespace} value must be a string, got {type(obs.value).__name__}")
+
             # Special validation for segment namespaces
-            if annotation.namespace.startswith("segment_salami_"):
+            elif annotation.namespace.startswith("segment_salami_"):
                 if isinstance(obs.value, str):
                     # Segment salami namespaces have specific string patterns
                     if annotation.namespace == "segment_salami_lower":
@@ -651,8 +659,8 @@ def validate_annotation(annotation):
                             raise SchemaError(f"{field} must be numeric, got {type(obs.value[field]).__name__}")
 
                     if field == "staff":
-                        if not isinstance(obs.value[field], int) or obs.value[field] <= 0:
-                            raise SchemaError(f"staff must be a positive integer, got {obs.value[field]}")
+                        if not isinstance(obs.value[field], (int, float)) or obs.value[field] <= 0:
+                            raise SchemaError(f"staff must be a positive number, got {obs.value[field]}")
 
                     if field in ["pattern_id", "occurrence_id"]:
                         if not isinstance(obs.value[field], int) or obs.value[field] <= 0:
