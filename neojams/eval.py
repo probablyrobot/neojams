@@ -24,6 +24,7 @@ import mir_eval
 import numpy as np
 
 from .compatibility import itervalues
+from .exceptions import SchemaError
 from .nsconvert import convert
 
 __all__ = ["beat", "chord", "melody", "onset", "segment", "hierarchy", "tempo", "pattern", "transcription"]
@@ -105,8 +106,24 @@ def beat(ref, est, **kwargs):
     ref = coerce_annotation(ref, namespace)
     est = coerce_annotation(est, namespace)
 
-    ref_times, _ = ref.to_event_values()
-    est_times, _ = est.to_event_values()
+    # Handle both interval and event values
+    if hasattr(ref, 'to_event_values'):
+        ref_times, _ = ref.to_event_values()
+    else:
+        ref_intervals, _ = ref.to_interval_values()
+        # Extract the first element of each interval tuple to get times
+        ref_times = [interval[0] for interval in ref_intervals]
+
+    if hasattr(est, 'to_event_values'):
+        est_times, _ = est.to_event_values()
+    else:
+        est_intervals, _ = est.to_interval_values()
+        # Extract the first element of each interval tuple to get times
+        est_times = [interval[0] for interval in est_intervals]
+
+    # Convert lists to numpy arrays for mir_eval
+    ref_times = np.array(ref_times)
+    est_times = np.array(est_times)
 
     return mir_eval.beat.evaluate(ref_times, est_times, **kwargs)
 
@@ -147,8 +164,24 @@ def onset(ref, est, **kwargs):
     ref = coerce_annotation(ref, namespace)
     est = coerce_annotation(est, namespace)
 
-    ref_times, _ = ref.to_event_values()
-    est_times, _ = est.to_event_values()
+    # Handle both interval and event values
+    if hasattr(ref, 'to_event_values'):
+        ref_times, _ = ref.to_event_values()
+    else:
+        ref_intervals, _ = ref.to_interval_values()
+        # Extract the first element of each interval tuple to get times
+        ref_times = [interval[0] for interval in ref_intervals]
+
+    if hasattr(est, 'to_event_values'):
+        est_times, _ = est.to_event_values()
+    else:
+        est_intervals, _ = est.to_interval_values()
+        # Extract the first element of each interval tuple to get times
+        est_times = [interval[0] for interval in est_intervals]
+
+    # Convert lists to numpy arrays for mir_eval
+    ref_times = np.array(ref_times)
+    est_times = np.array(est_times)
 
     return mir_eval.onset.evaluate(ref_times, est_times, **kwargs)
 
@@ -192,7 +225,16 @@ def chord(ref, est, **kwargs):
     ref_interval, ref_value = ref.to_interval_values()
     est_interval, est_value = est.to_interval_values()
 
-    return mir_eval.chord.evaluate(ref_interval, ref_value, est_interval, est_value, **kwargs)
+    # Convert to numpy arrays if they are lists
+    if isinstance(ref_interval, list):
+        ref_interval = np.array(ref_interval)
+    if isinstance(est_interval, list):
+        est_interval = np.array(est_interval)
+
+    try:
+        return mir_eval.chord.evaluate(ref_interval, ref_value, est_interval, est_value, **kwargs)
+    except mir_eval.chord.InvalidChordException as e:
+        raise SchemaError(str(e))
 
 
 def segment(ref, est, **kwargs):
@@ -233,6 +275,12 @@ def segment(ref, est, **kwargs):
     ref_interval, ref_value = ref.to_interval_values()
     est_interval, est_value = est.to_interval_values()
 
+    # Convert to numpy arrays if they are lists
+    if isinstance(ref_interval, list):
+        ref_interval = np.array(ref_interval)
+    if isinstance(est_interval, list):
+        est_interval = np.array(est_interval)
+
     return mir_eval.segment.evaluate(ref_interval, ref_value, est_interval, est_value, **kwargs)
 
 
@@ -256,7 +304,7 @@ def hierarchy_flatten(annotation):
     intervals, values = annotation.to_interval_values()
 
     # Handle non-multi_segment namespaces
-    if annotation.namespace.startswith('segment_') and annotation.namespace != 'multi_segment':
+    if annotation.namespace.startswith("segment_") and annotation.namespace != "multi_segment":
         # For segment_tut and other segment namespaces, create single-level hierarchy
         # Assuming string values for segment namespaces
         return [intervals], [values]
@@ -400,11 +448,28 @@ def melody(ref, est, **kwargs):
     ref = coerce_annotation(ref, namespace)
     est = coerce_annotation(est, namespace)
 
-    ref_times, ref_p = ref.to_event_values()
-    est_times, est_p = est.to_event_values()
+    # Handle both interval and event values
+    if hasattr(ref, 'to_event_values'):
+        ref_times, ref_p = ref.to_event_values()
+    else:
+        ref_intervals, ref_p = ref.to_interval_values()
+        # Extract the first element of each interval tuple to get times
+        ref_times = [interval[0] for interval in ref_intervals]
 
-    ref_freq = np.asarray([p["frequency"] * (-1) ** (~p["voiced"]) for p in ref_p])
-    est_freq = np.asarray([p["frequency"] * (-1) ** (~p["voiced"]) for p in est_p])
+    if hasattr(est, 'to_event_values'):
+        est_times, est_p = est.to_event_values()
+    else:
+        est_intervals, est_p = est.to_interval_values()
+        # Extract the first element of each interval tuple to get times
+        est_times = [interval[0] for interval in est_intervals]
+
+    if isinstance(ref_times, list):
+        ref_times = np.array(ref_times)
+    if isinstance(est_times, list):
+        est_times = np.array(est_times)
+
+    ref_freq = np.asarray([p["frequency"] * (-1) ** (not p["voiced"]) for p in ref_p])
+    est_freq = np.asarray([p["frequency"] * (-1) ** (not p["voiced"]) for p in est_p])
 
     return mir_eval.melody.evaluate(ref_times, ref_freq, est_times, est_freq, **kwargs)
 
@@ -436,8 +501,12 @@ def pattern_to_mireval(ann):
     patterns = defaultdict(lambda: defaultdict(list))
 
     # Iterate over the data in interval-value format
+    intervals, observations = ann.to_interval_values()
+    
+    # Extract times from intervals - use start time
+    times = [interval[0] for interval in intervals]
 
-    for time, observation in zip(*ann.to_event_values(), strict=False):
+    for time, observation in zip(times, observations, strict=False):
         pattern_id = observation["pattern_id"]
         occurrence_id = observation["occurrence_id"]
         obs = (time, observation["midi_pitch"])
@@ -532,7 +601,13 @@ def transcription(ref, est, **kwargs):
     ref_intervals, ref_p = ref.to_interval_values()
     est_intervals, est_p = est.to_interval_values()
 
-    ref_pitches = np.asarray([p["frequency"] * (-1) ** (~p["voiced"]) for p in ref_p])
-    est_pitches = np.asarray([p["frequency"] * (-1) ** (~p["voiced"]) for p in est_p])
+    # Convert to numpy arrays if they are lists
+    if isinstance(ref_intervals, list):
+        ref_intervals = np.array(ref_intervals)
+    if isinstance(est_intervals, list):
+        est_intervals = np.array(est_intervals)
+
+    ref_pitches = np.asarray([p["frequency"] * (-1) ** (not p["voiced"]) for p in ref_p])
+    est_pitches = np.asarray([p["frequency"] * (-1) ** (not p["voiced"]) for p in est_p])
 
     return mir_eval.transcription.evaluate(ref_intervals, ref_pitches, est_intervals, est_pitches, **kwargs)

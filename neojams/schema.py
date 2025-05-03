@@ -23,6 +23,11 @@ import warnings
 from collections import defaultdict
 
 import jsonschema
+import jsonschema.validators
+import numpy as np
+
+from . import exceptions
+from .util import find_with_extension
 
 try:
     from importlib import resources
@@ -432,6 +437,33 @@ def get_dtypes(namespace):
     return dtypes
 
 
+def normalize_numpy_types(obj):
+    """Convert NumPy types to Python types for JSON serialization and validation.
+    
+    Parameters
+    ----------
+    obj : object
+        Object to convert
+        
+    Returns
+    -------
+    object
+        Converted object with NumPy types transformed to Python types
+    """
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, (list, tuple)):
+        return [normalize_numpy_types(x) for x in obj]
+    elif isinstance(obj, dict):
+        return {k: normalize_numpy_types(v) for k, v in obj.items()}
+    else:
+        return obj
+
+
 def validate_annotation(annotation):
     """Validate an annotation object against its schema.
 
@@ -454,6 +486,11 @@ def validate_annotation(annotation):
     """
     if annotation.namespace not in __NAMESPACE__:
         raise NamespaceError(f"Unknown namespace: {annotation.namespace}")
+
+    # Convert observation values to JSON serializable format
+    # This includes converting numpy types to Python native types
+    for obs in annotation.data:
+        obs.value = normalize_numpy_types(obs.value)
 
     # Get the schema for this namespace
     namespace_schema = schema(annotation.namespace)

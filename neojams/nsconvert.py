@@ -106,6 +106,12 @@ def convert(annotation, target_namespace):
         for source in __CONVERSION__[target_namespace]:
             if annotation.search(namespace=source):
                 return __CONVERSION__[target_namespace][source](annotation)
+            
+            # Special handling for segment and tag patterns that use wildcards
+            if source.endswith('.*'):
+                prefix = source[:-2]  # Remove .* from end
+                if annotation.namespace.startswith(prefix):
+                    return __CONVERSION__[target_namespace][source](annotation)
 
     # No conversion possible
     raise NamespaceError(
@@ -143,6 +149,13 @@ def can_convert(annotation, target_namespace):
         for source in __CONVERSION__[target_namespace]:
             if annotation.search(namespace=source):
                 return True
+            
+            # Special handling for segment and tag patterns that use wildcards
+            if source.endswith('.*'):
+                prefix = source[:-2]  # Remove .* from end
+                if annotation.namespace.startswith(prefix):
+                    return True
+                    
     return False
 
 
