@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -26,10 +28,24 @@ jobs:
       run: |
         poetry install --with dev
         
-    - name: Build and publish
+    - name: Validate package
+      run: |
+        poetry check
+        
+    - name: Run tests
+      run: |
+        poetry run pytest
+        
+    - name: Build package
+      run: |
+        poetry build
+        # List the built packages
+        ls -l dist/
+        
+    - name: Publish to PyPI
+      if: success()
       env:
         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
       run: |
         poetry config pypi-token.pypi $PYPI_TOKEN
-        poetry build
         poetry publish 

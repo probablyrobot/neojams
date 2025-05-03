@@ -3,11 +3,9 @@ NeoJAMS: A JSON Annotated Music Specification
 
 [![PyPI](https://img.shields.io/pypi/v/neojams.svg)](https://pypi.python.org/pypi/neojams)
 [![License](https://img.shields.io/github/license/marl/jams.svg)](https://github.com/marl/jams/blob/main/LICENSE.md)
-[![Build Status](https://travis-ci.org/marl/jams.svg?branch=main)](https://travis-ci.org/marl/jams)
-[![Coverage Status](https://coveralls.io/repos/marl/jams/badge.svg?branch=main)](https://coveralls.io/r/marl/jams?branch=main)
-[![Dependency Status](https://dependencyci.com/github/marl/jams/badge)](https://dependencyci.com/github/marl/jams)
-[![Python Versions](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](https://www.python.org/)
 [![Tests](https://github.com/probablyrobot/neojams/actions/workflows/test.yml/badge.svg)](https://github.com/probablyrobot/neojams/actions/workflows/test.yml)
+[![PyPI Deployment](https://github.com/probablyrobot/neojams/actions/workflows/publish.yml/badge.svg)](https://github.com/probablyrobot/neojams/actions/workflows/publish.yml)
+[![Python Versions](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)](https://www.python.org/)
 
 A Python package for working with the JAMS format, with added support for Python 3.12 and 3.13.
 
@@ -84,6 +82,31 @@ Development
 NeoJAMS is compatible with Python 3.9-3.13, with special attention to compatibility with Python 3.12 and 3.13.
 
 For development setup and guidelines, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+PyPI Deployment
+--------------
+This package is automatically published to PyPI when a new GitHub release is created. The deployment is handled by GitHub Actions using the workflow defined in `.github/workflows/publish.yml`.
+
+For maintainers who need to set up PyPI deployment:
+
+1. Create a PyPI API token:
+   - Go to https://pypi.org/manage/account/token/
+   - Create a new token with scope "Entire account" or specific to this project
+   - Copy the token value (it will only be shown once)
+
+2. Add the token to GitHub repository secrets:
+   - Go to your GitHub repository settings
+   - Navigate to "Secrets and variables" > "Actions"
+   - Create a new repository secret named `PYPI_TOKEN` with the value of your PyPI token
+
+3. To trigger a new release:
+   - Go to the "Releases" section of your GitHub repository
+   - Click "Draft a new release"
+   - Create a new tag following semantic versioning (e.g., v0.2.1)
+   - Add release notes
+   - Publish the release - this will automatically trigger the GitHub Actions workflow
+
+Note: The version in the PyPI package will be taken from the `version` field in `pyproject.toml`. Make sure to update this version before creating a new release.
 
 Who
 ----
