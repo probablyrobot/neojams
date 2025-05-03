@@ -18,7 +18,7 @@ import numpy as np
 from .exceptions import NamespaceError
 
 # The structure that handles all conversion mappings
-__CONVERSION__ = defaultdict(defaultdict)
+__CONVERSION__ = defaultdict(lambda: defaultdict(dict))
 
 __all__ = ["convert", "can_convert"]
 

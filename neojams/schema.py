@@ -21,7 +21,6 @@ import pprint
 import re
 import warnings
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import jsonschema
 
@@ -50,14 +49,17 @@ NS_REGEX = r"^(namespace|.*jams)\-[a-z]+.json$"
 
 __all__ = ["is_valid", "validate", "schema_path", "JAMS_SCHEMA", "values", "add_namespace", "list_namespaces"]
 
+
 # Define namespace validation functions and store them
 def _validate_time(value, **kwargs):
-    if kwargs.get('duration', 0.0) < 0.0:
+    if kwargs.get("duration", 0.0) < 0.0:
         return False
     return value >= 0
 
+
 def _validate_confidence(value, **kwargs):
     return 0.0 <= value <= 1.0
+
 
 def _validate_value(value, namespace, **kwargs):
     if namespace in __NAMESPACE__:
@@ -66,9 +68,52 @@ def _validate_value(value, namespace, **kwargs):
             return value in namespace_schema["properties"]["value"]["enum"]
     return True
 
+
 # For legacy compatibility
 VALIDATOR = None
-namespace_array = {}
+
+
+def namespace_array(namespace: str) -> dict:
+    """Get the schema for a namespace's array type.
+
+    Parameters
+    ----------
+    namespace : str
+        Namespace to get schema for
+
+    Returns
+    -------
+    schema : dict
+        Schema definition for the namespace's array type
+
+    Raises
+    ------
+    NamespaceError
+        If the namespace is not found
+    """
+    if namespace not in __NAMESPACE__:
+        raise NamespaceError(f"Unknown namespace: {namespace}")
+
+    schema_def = schema(namespace)
+
+    # The namespace schema follows the pattern {"properties": { ... }}
+    # Extract the schema for the `value` field.  Fall back to an empty schema
+    # if it cannot be found (this mirrors legacy behaviour).
+    value_schema = schema_def.get("properties", {}).get("value", {})
+
+    # Build conformant observation schema
+    return {
+        "type": "object",
+        "properties": {
+            "time": {"type": "number", "minimum": 0},
+            "duration": {"type": "number", "minimum": 0},
+            "value": value_schema,
+            # confidence is optional in many datasets; allow null in addition to number
+            "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        },
+        # No additional properties allowed by default
+        "additionalProperties": False,
+    }
 
 
 def is_dense(namespace: str) -> bool:
@@ -93,7 +138,7 @@ def is_dense(namespace: str) -> bool:
     """
     if namespace in __NAMESPACE__:
         return True
-    raise NamespaceError("Unknown namespace: {}".format(namespace))
+    raise NamespaceError(f"Unknown namespace: {namespace}")
 
 
 def is_valid(obj, schema=None):
@@ -223,7 +268,10 @@ def schema(namespace):
     """
 
     with open(schema_path(namespace)) as fdesc:
-        return json.load(fdesc)
+        schema_def = json.load(fdesc)
+        # The schema files use a different format where the namespace is the key
+        # and the schema definition is the value
+        return schema_def[namespace]
 
 
 def values(namespace):
@@ -286,12 +334,14 @@ def add_namespace(filename):
                 warnings.warn(f"Unable to load namespace from file: {filename}", stacklevel=2)
                 return False
 
-        # Store schema by its namespace
+        # The schema files use a different format where the namespace is the key
+        # and the schema definition is the value
         try:
-            namespace = schema_def["namespace"]
+            # Get the first (and only) key from the schema definition
+            namespace = list(schema_def.keys())[0]
             __NAMESPACE__[namespace].append(filename)
             return True
-        except KeyError:
+        except (KeyError, IndexError):
             warnings.warn(f"Schema missing namespace: {filename}", stacklevel=2)
             return False
 
@@ -340,13 +390,13 @@ def get_dtypes(namespace):
         raise NamespaceError(f"Unknown namespace: {namespace}")
 
     schema_def = schema(namespace)
-    
+
     dtypes = {}
-    
+
     for field, spec in schema_def["properties"].items():
         if "type" in spec:
             dtypes[field] = spec["type"]
-    
+
     return dtypes
 
 
@@ -354,7 +404,7 @@ def validate_annotation(annotation):
     """Validate an annotation object against its schema."""
     if annotation.namespace not in __NAMESPACE__:
         raise NamespaceError(f"Unknown namespace: {annotation.namespace}")
-    
+
     # Basic validation for observations
     for obs in annotation.data:
         if hasattr(obs, "time") and _validate_time(obs.time) is False:
@@ -363,7 +413,7 @@ def validate_annotation(annotation):
             return False
         if hasattr(obs, "value") and _validate_value(obs.value, annotation.namespace) is False:
             return False
-    
+
     return True
 
 
@@ -424,3 +474,4 @@ def __load_jams_schema():
 # Create the global schema mapping object
 _load_all_namespaces()
 JAMS_SCHEMA = __load_jams_schema()
+VALIDATOR = jsonschema.validators.Draft4Validator(JAMS_SCHEMA)

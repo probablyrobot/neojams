@@ -38,7 +38,6 @@ import json
 import os
 import re
 import warnings
-from collections import namedtuple
 
 import jsonschema
 import numpy as np
@@ -49,6 +48,7 @@ from sortedcontainers import SortedKeyList
 from . import schema
 from .compatibility import get_function_code, iteritems, string_types
 from .exceptions import JamsError, ParameterError, SchemaError
+from .models import Observation
 from .version import version as __VERSION__
 
 __all__ = [
@@ -264,13 +264,13 @@ class JObject:
 
     def __json_light__(self, data=True):
         """Return a dict of attributes suitable for JSON serialization.
-        
+
         Parameters
         ----------
         data : bool
             If True, include all data attributes.
             If False, exclude data attributes.
-            
+
         Returns
         -------
         json_dict : dict
@@ -278,7 +278,7 @@ class JObject:
         """
         res = {}
         for key in self.__dict__:
-            if data or key != 'data':
+            if data or key != "data":
                 res[key] = serialize_obj(self.__dict__[key])
         return res
 
@@ -342,9 +342,11 @@ class JObject:
 
             out += f'<div class="panel panel-{prop_class}">'
 
-            if (isinstance(self[prop], JObject) or 
-                isinstance(self[prop], AnnotationArray) or 
-                isinstance(self[prop], dict)) and content:
+            if (
+                isinstance(self[prop], JObject)
+                or isinstance(self[prop], AnnotationArray)
+                or isinstance(self[prop], dict)
+            ) and content:
                 # These classes should have collapses
                 div_id = _get_divid(self[prop])
 
@@ -595,10 +597,6 @@ class JObject:
         return valid
 
 
-Observation = namedtuple("Observation", ["time", "duration", "value", "confidence"])
-"""Core observation type: (time, duration, value, confidence)."""
-
-
 class Sandbox(JObject):
     """Sandbox (unconstrained)
 
@@ -709,7 +707,7 @@ class Annotation(JObject):
         """
         for obs in records:
             if isinstance(obs, Observation):
-                self.append(**obs._asdict())
+                self.append(**obs.model_dump())
             else:
                 self.append(**obs)
 
@@ -767,18 +765,19 @@ class Annotation(JObject):
         valid = True
 
         try:
+            # Validate the annotation metadata
             schema.VALIDATOR.validate(self.__json_light__(data=False), schema.JAMS_SCHEMA)
 
-            # validate each record in the frame
-            data_ser = [serialize_obj(obs) for obs in self.data]
-            schema.VALIDATOR.validate(data_ser, ann_schema)
+            # Validate each observation against the namespace schema
+            for obs in self.data:
+                schema.VALIDATOR.validate(obs.model_dump(), ann_schema)
 
-        except jsonschema.ValidationError as invalid:
+        except jsonschema.ValidationError as e:
             if strict:
-                raise SchemaError(str(invalid)) from None
+                raise SchemaError(e.instance, e.schema) from None
             else:
-                warnings.warn(str(invalid), stacklevel=2)
-            valid = False
+                warnings.warn(str(e), stacklevel=2)
+                valid = False
 
         return valid
 
@@ -1282,12 +1281,11 @@ class Annotation(JObject):
     def __json_data__(self):
         r"""JSON-serialize the observation sequence."""
         if schema.is_dense(self.namespace):
-            dense_records = {}
-            for field in Observation._fields:
-                dense_records[field] = []
-
+            # Build dense (column-major) representation directly from Observation instances
+            dense_records = {field: [] for field in Observation._fields}
             for obs in self.data:
-                for key, val in obs._asdict().items():
+                record = obs.model_dump()
+                for key, val in record.items():
                     dense_records[key].append(serialize_obj(val))
 
             return dense_records
@@ -2092,7 +2090,7 @@ def serialize_obj(obj):
         return [serialize_obj(x) for x in obj]
 
     elif isinstance(obj, Observation):
-        return {k: serialize_obj(v) for k, v in obj._asdict().items()}
+        return {k: serialize_obj(v) for k, v in obj.model_dump().items()}
 
     return obj
 

@@ -6,7 +6,7 @@ This module contains Pydantic models that represent the core NeoJAMS data struct
 with proper type checking and validation.
 """
 
-from typing import Any
+from typing import Any, ClassVar, Tuple
 
 from pydantic import BaseModel, Field
 
@@ -18,6 +18,39 @@ class Observation(BaseModel):
     duration: float = Field(..., description="The duration of the observation in seconds", ge=0)
     value: Any = Field(..., description="The value of the observation")
     confidence: float | None = Field(None, description="Confidence value", ge=0, le=1)
+
+    # Provide compatibility with namedtuple interface used in legacy core code
+    _fields: ClassVar[Tuple[str, ...]] = ("time", "duration", "value", "confidence")
+
+    model_config = {
+        "validate_assignment": True,
+        "extra": "forbid",
+        "arbitrary_types_allowed": True,
+        "from_attributes": True,
+    }
+
+    def __json_light__(self) -> dict:
+        """Return a lightweight JSON representation of the observation."""
+        return self.model_dump()
+
+    def __getstate__(self) -> dict:
+        """Return the state for pickling (used by pickle)."""
+        return self.model_dump()
+
+    # Maintain compatibility with namedtuple _asdict method expected elsewhere
+    def _asdict(self) -> dict:  # noqa: D401
+        """Return a dictionary representation of the observation."""
+        return self.model_dump()
+
+    def model_dump(self) -> dict:
+        """Return a dictionary representation of the observation."""
+        return {"time": self.time, "duration": self.duration, "value": self.value, "confidence": self.confidence}
+
+    def __getattr__(self, name: str) -> Any:
+        """Handle attribute access for compatibility."""
+        if name == "model_dump":
+            return self.model_dump
+        return super().__getattr__(name)
 
 
 class Sandbox(BaseModel):
