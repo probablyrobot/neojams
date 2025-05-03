@@ -262,6 +262,26 @@ class JObject:
     def __json__(self):
         return self.__json_light__(data=True)
 
+    def __json_light__(self, data=True):
+        """Return a dict of attributes suitable for JSON serialization.
+        
+        Parameters
+        ----------
+        data : bool
+            If True, include all data attributes.
+            If False, exclude data attributes.
+            
+        Returns
+        -------
+        json_dict : dict
+            A dictionary of attributes that can be serialized to JSON.
+        """
+        res = {}
+        for key in self.__dict__:
+            if data or key != 'data':
+                res[key] = serialize_obj(self.__dict__[key])
+        return res
+
     @classmethod
     def __json_init__(cls, **kwargs):
         """Initialize the object from a dictionary of values"""
@@ -322,7 +342,9 @@ class JObject:
 
             out += f'<div class="panel panel-{prop_class}">'
 
-            if isinstance(self[prop], JObject | AnnotationArray | dict) and content:
+            if (isinstance(self[prop], JObject) or 
+                isinstance(self[prop], AnnotationArray) or 
+                isinstance(self[prop], dict)) and content:
                 # These classes should have collapses
                 div_id = _get_divid(self[prop])
 

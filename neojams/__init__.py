@@ -7,7 +7,7 @@ from importlib import resources
 from itertools import chain
 
 # Import the necessary modules
-from . import eval, schema, sonify, util
+from . import eval, schema, sonify, util, display
 from .core import (
     JAMS,
     Annotation,
@@ -83,6 +83,7 @@ __all__ = [
     "convert",
     "list_namespaces",
     "__version__",
+    "display",
     # Pydantic models
     "JAMSModel",
     "AnnotationModel",

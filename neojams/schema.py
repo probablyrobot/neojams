@@ -50,6 +50,22 @@ NS_REGEX = r"^(namespace|.*jams)\-[a-z]+.json$"
 
 __all__ = ["is_valid", "validate", "schema_path", "JAMS_SCHEMA", "values", "add_namespace", "list_namespaces"]
 
+# Define namespace validation functions and store them
+def _validate_time(value, **kwargs):
+    if kwargs.get('duration', 0.0) < 0.0:
+        return False
+    return value >= 0
+
+def _validate_confidence(value, **kwargs):
+    return 0.0 <= value <= 1.0
+
+def _validate_value(value, namespace, **kwargs):
+    if namespace in __NAMESPACE__:
+        namespace_schema = schema(namespace)
+        if "enum" in namespace_schema["properties"]["value"]:
+            return value in namespace_schema["properties"]["value"]["enum"]
+    return True
+
 # For legacy compatibility
 VALIDATOR = None
 namespace_array = {}
@@ -305,6 +321,50 @@ def list_namespaces():
     """
 
     return list(__NAMESPACE__.keys())
+
+
+def get_dtypes(namespace):
+    """Get the expected datatypes for each field in a namespace
+
+    Parameters
+    ----------
+    namespace : str
+        The namespace to examine
+
+    Returns
+    -------
+    dtypes : dict
+        A dictionary mapping field names to datatype descriptors
+    """
+    if namespace not in __NAMESPACE__:
+        raise NamespaceError(f"Unknown namespace: {namespace}")
+
+    schema_def = schema(namespace)
+    
+    dtypes = {}
+    
+    for field, spec in schema_def["properties"].items():
+        if "type" in spec:
+            dtypes[field] = spec["type"]
+    
+    return dtypes
+
+
+def validate_annotation(annotation):
+    """Validate an annotation object against its schema."""
+    if annotation.namespace not in __NAMESPACE__:
+        raise NamespaceError(f"Unknown namespace: {annotation.namespace}")
+    
+    # Basic validation for observations
+    for obs in annotation.data:
+        if hasattr(obs, "time") and _validate_time(obs.time) is False:
+            return False
+        if hasattr(obs, "confidence") and _validate_confidence(obs.confidence) is False:
+            return False
+        if hasattr(obs, "value") and _validate_value(obs.value, annotation.namespace) is False:
+            return False
+    
+    return True
 
 
 def _get_schema_paths():
