@@ -15,6 +15,13 @@ repos:
       - id: mixed-line-ending
         files: ^neojams/
 
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        files: ^neojams/
+        args: ["--profile", "black", "--filter-files"]
+
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.1.5
     hooks:

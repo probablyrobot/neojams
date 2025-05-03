@@ -25,27 +25,13 @@ from .core import (
 from .exceptions import JamsError, NamespaceError, ParameterError, SchemaError
 
 # Import the Pydantic models
-from .models import (
-    JAMS as JAMSModel,
-)
-from .models import (
-    Annotation as AnnotationModel,
-)
-from .models import (
-    AnnotationMetadata as AnnotationMetadataModel,
-)
-from .models import (
-    Curator as CuratorModel,
-)
-from .models import (
-    FileMetadata as FileMetadataModel,
-)
-from .models import (
-    Observation as ObservationModel,
-)
-from .models import (
-    Sandbox as SandboxModel,
-)
+from .models import JAMS as JAMSModel
+from .models import Annotation as AnnotationModel
+from .models import AnnotationMetadata as AnnotationMetadataModel
+from .models import Curator as CuratorModel
+from .models import FileMetadata as FileMetadataModel
+from .models import Observation as ObservationModel
+from .models import Sandbox as SandboxModel
 from .nsconvert import convert
 from .schema import list_namespaces
 from .version import JAMS_VERSION, __version__
