@@ -19,7 +19,7 @@ from mir_eval.util import filter_kwargs
 
 from .compatibility import iteritems
 from .eval import coerce_annotation, hierarchy_flatten
-from .exceptions import NamespaceError
+from .exceptions import NamespaceError, SchemaError
 
 __all__ = ["sonify"]
 
@@ -46,8 +46,11 @@ def clicks(annotation, sr=22050, length=None, **kwargs):
     """
 
     interval, _ = annotation.to_interval_values()
-
-    return filter_kwargs(mir_eval.sonify.clicks, interval[:, 0], fs=sr, length=length, **kwargs)
+    
+    # Convert the list of tuples to a numpy array for proper indexing
+    interval_array = np.array(interval)
+    
+    return filter_kwargs(mir_eval.sonify.clicks, interval_array[:, 0], fs=sr, length=length, **kwargs)
 
 
 def downbeat(annotation, sr=22050, length=None, **kwargs):
@@ -57,17 +60,20 @@ def downbeat(annotation, sr=22050, length=None, **kwargs):
     downbeat_click = mkclick(440 * 3, sr=sr)
 
     intervals, values = annotation.to_interval_values()
-
+    
+    # Convert intervals to numpy array for proper indexing
+    intervals_array = np.array(intervals)
+    
     beats, downbeats = [], []
 
-    for time, value in zip(intervals[:, 0], values, strict=False):
+    for time, value in zip(intervals_array[:, 0], values, strict=False):
         if value["position"] == 1:
             downbeats.append(time)
         else:
             beats.append(time)
 
     if length is None:
-        length = int(sr * np.max(intervals)) + len(beat_click) + 1
+        length = int(sr * np.max(intervals_array)) + len(beat_click) + 1
 
     y = filter_kwargs(mir_eval.sonify.clicks, np.asarray(beats), fs=sr, length=length, click=beat_click)
 
@@ -84,12 +90,15 @@ def multi_segment(annotation, sr=22050, length=None, **kwargs):
     DURATION = 0.1
 
     h_int, _ = hierarchy_flatten(annotation)
+    
+    # Convert lists to numpy arrays
+    h_int_np = [np.array(x) for x in h_int]
 
     if length is None:
-        length = int(sr * (max(np.max(_) for _ in h_int) + 1.0 / DURATION) + 1)
+        length = int(sr * (max(np.max(_) for _ in h_int_np) + 1.0 / DURATION) + 1)
 
     y = 0.0
-    for ints, (oc, scale) in zip(h_int, itertools.product(range(3, 3 + len(h_int)), PENT), strict=False):
+    for ints, (oc, scale) in zip(h_int_np, itertools.product(range(3, 3 + len(h_int_np)), PENT), strict=False):
         click = mkclick(440.0 * scale * oc, sr=sr, duration=DURATION)
         y = y + filter_kwargs(mir_eval.sonify.clicks, np.unique(ints), fs=sr, length=length, click=click)
     return y
@@ -102,8 +111,11 @@ def chord(annotation, sr=22050, length=None, **kwargs):
     """
 
     intervals, chords = annotation.to_interval_values()
+    
+    # Convert intervals to numpy array for proper mir_eval compatibility
+    intervals_array = np.array(intervals)
 
-    return filter_kwargs(mir_eval.sonify.chords, chords, intervals, fs=sr, length=length, **kwargs)
+    return filter_kwargs(mir_eval.sonify.chords, chords, intervals_array, fs=sr, length=length, **kwargs)
 
 
 def pitch_contour(annotation, sr=22050, length=None, **kwargs):
@@ -145,6 +157,9 @@ def piano_roll(annotation, sr=22050, length=None, **kwargs):
     """
 
     intervals, pitches = annotation.to_interval_values()
+    
+    # Convert intervals to numpy array
+    intervals_array = np.array(intervals)
 
     # Construct the pitchogram
     pitch_map = {f: idx for idx, f in enumerate(np.unique(pitches))}
@@ -155,7 +170,7 @@ def piano_roll(annotation, sr=22050, length=None, **kwargs):
         gram[pitch_map[f], col] = 1
 
     return filter_kwargs(
-        mir_eval.sonify.time_frequency, gram, np.asarray(pitches), np.asarray(intervals), sr, length=length, **kwargs
+        mir_eval.sonify.time_frequency, gram, np.asarray(pitches), intervals_array, sr, length=length, **kwargs
     )
 
 
@@ -209,7 +224,13 @@ def sonify(annotation, sr=22050, duration=None, **kwargs):
     # If the annotation can be directly sonified, try that first
     if annotation.namespace in SONIFY_MAPPING:
         ann = coerce_annotation(annotation, annotation.namespace)
-        return SONIFY_MAPPING[annotation.namespace](ann, sr=sr, length=length, **kwargs)
+        try:
+            return SONIFY_MAPPING[annotation.namespace](ann, sr=sr, length=length, **kwargs)
+        except Exception as e:
+            # Convert any mir_eval exceptions to SchemaError
+            if "mir_eval" in str(e.__class__):
+                raise SchemaError(str(e)) from None
+            raise
 
     for namespace, func in iteritems(SONIFY_MAPPING):
         try:
@@ -217,5 +238,10 @@ def sonify(annotation, sr=22050, duration=None, **kwargs):
             return func(ann, sr=sr, length=length, **kwargs)
         except NamespaceError:
             pass
+        except Exception as e:
+            # Convert any mir_eval exceptions to SchemaError
+            if "mir_eval" in str(e.__class__):
+                raise SchemaError(str(e)) from None
+            raise
 
     raise NamespaceError(f'Unable to sonify annotation of namespace="{annotation.namespace:s}"')

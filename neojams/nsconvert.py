@@ -42,6 +42,16 @@ def _conversion(target, source):
     return register
 
 
+def extract_data(annotation):
+    """Extract the data from an annotation and clear it.
+    
+    This replaces the old pop_data method, which no longer exists.
+    """
+    data = list(annotation.data)  # Make a copy of the data
+    annotation.data = []  # Clear the data
+    return data
+
+
 def convert(annotation, target_namespace):
     """Convert a given annotation to the target namespace.
 
@@ -140,7 +150,7 @@ def can_convert(annotation, target_namespace):
 def pitch_hz_to_contour(annotation):
     """Convert a pitch_hz annotation to a contour"""
     annotation.namespace = "pitch_contour"
-    data = annotation.pop_data()
+    data = extract_data(annotation)
 
     for obs in data:
         annotation.append(
@@ -164,7 +174,7 @@ def note_midi_to_hz(annotation):
     """Convert a pitch_midi annotation to pitch_hz"""
 
     annotation.namespace = "note_hz"
-    data = annotation.pop_data()
+    data = extract_data(annotation)
 
     for obs in data:
         annotation.append(
@@ -183,7 +193,7 @@ def note_hz_to_midi(annotation):
 
     annotation.namespace = "note_midi"
 
-    data = annotation.pop_data()
+    data = extract_data(annotation)
 
     for obs in data:
         annotation.append(
@@ -202,7 +212,7 @@ def pitch_midi_to_hz(annotation):
 
     annotation.namespace = "pitch_hz"
 
-    data = annotation.pop_data()
+    data = extract_data(annotation)
 
     for obs in data:
         annotation.append(
@@ -221,7 +231,7 @@ def pitch_hz_to_midi(annotation):
 
     annotation.namespace = "pitch_midi"
 
-    data = annotation.pop_data()
+    data = extract_data(annotation)
 
     for obs in data:
         annotation.append(
@@ -255,7 +265,7 @@ def scaper_to_tag(annotation):
 
     annotation.namespace = "tag_open"
 
-    data = annotation.pop_data()
+    data = extract_data(annotation)
     for obs in data:
         annotation.append(time=obs.time, duration=obs.duration, confidence=obs.confidence, value=obs.value["label"])
 
@@ -267,7 +277,7 @@ def beat_position(annotation):
     """Convert beat_position to beat"""
 
     annotation.namespace = "beat"
-    data = annotation.pop_data()
+    data = extract_data(annotation)
     for obs in data:
         annotation.append(time=obs.time, duration=obs.duration, confidence=obs.confidence, value=obs.value["position"])
 
