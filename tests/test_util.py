@@ -51,7 +51,7 @@ def test_import_lab(ns, lab, ints, y, infer_duration):
     ],
 )
 def test_query_pop(query, prefix, sep, target):
-    assert target == core.query_pop(query, prefix, sep=sep)
+    assert target == util.query_pop(query, prefix, sep=sep)
 
 
 @pytest.mark.parametrize(

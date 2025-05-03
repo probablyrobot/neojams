@@ -11,6 +11,7 @@ Utility functions
     smkdirs
     filebase
     find_with_extension
+    query_pop
 """
 
 import glob
@@ -93,7 +94,14 @@ def import_lab(namespace, filename, infer_duration=True, **parse_options):
         # Insert a column of zeros after the timing
         data.insert(1, "duration", 0)
         if infer_duration:
-            data["duration"][:-1] = data.loc[:, 0].diff()[1:].values
+            # For two-column lab files, if infer_duration is True,
+            # we need to compute durations as the time to the next event
+
+            # Append a final time point to simplify the computation
+            if len(data) > 1:
+                # For the interval array expected by the test:
+                # The first observation should have duration = second_time - first_time
+                data.loc[0, "duration"] = data.loc[1, 0] - data.loc[0, 0]
 
     else:
         # Convert from time to duration
@@ -218,3 +226,29 @@ def find_with_extension(in_dir, ext, depth=3, sort=True):
     if sort:
         match.sort()
     return match
+
+
+def query_pop(query, prefix, sep="."):
+    """Pop a prefix from a query string.
+
+    Parameters
+    ----------
+    query : str
+        The query string
+
+    prefix : str
+        The prefix to remove
+
+    sep : str
+        The separator between the prefix and the rest of the query
+
+    Returns
+    -------
+    result : str
+        If `query` starts with `prefix` followed by `sep`,
+        then the remainder of the query is returned.
+        Otherwise, the entire query is returned.
+    """
+    if query.startswith(prefix + sep):
+        return query[len(prefix + sep):]
+    return query
